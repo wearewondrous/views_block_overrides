@@ -1,0 +1,31 @@
+<?php
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ *  Implements hook_field_widget_FIELD-ID_FORM_alter().
+ *
+ * TODO add settings form to alter only specific blocks.
+ */
+function views_block_overrides_field_widget_block_field_default_form_alter(&$element, FormStateInterface $form_state, $context) {
+  if (isset($element['settings']['context_mapping'])) {
+    foreach($element['settings']['context_mapping'] as $context_element_id => &$context_element) {
+      if ($context_element['#type'] == 'select' && empty($context_element['#options'])) {
+        // Don't display the context mapping element if it's empty.
+        $context_element['#access'] = FALSE;
+      }
+    }
+    $hiden_elements = [
+      'views_label_checkbox',
+      'views_label_fieldset',
+      'views_label',
+      'label',
+      'label_display',
+    ];
+    foreach ($hiden_elements as $name) {
+      if (isset($element['settings'][$name])) {
+        $element['settings'][$name]['#access'] = FALSE;
+      }
+    }
+  }
+}

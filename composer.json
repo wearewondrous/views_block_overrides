@@ -1,0 +1,14 @@
+{
+  "name": "drupal/views_block_overrides",
+  "type": "drupal-module",
+  "description": "Allows block displays to override view filters",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/views_block_overrides",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/views_block_overrides",
+    "source": "http://cgit.drupalcode.org/views_block_overrides"
+  },
+  "require": { }
+}

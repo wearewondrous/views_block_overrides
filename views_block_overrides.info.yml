@@ -1,0 +1,7 @@
+name: Views block overrides
+type: module
+description: Allows block displays to override block configuration.
+core: 8.x
+package: Views
+dependencies:
+  - views
