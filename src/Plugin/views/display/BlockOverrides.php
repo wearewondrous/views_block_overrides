@@ -8,6 +8,7 @@ use Drupal\views\Plugin\views\display\Block;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\taxonomy\Entity\Term;
+use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManagerInterface;
 
 /**
  * A block plugin that allows exposed filters to be configured.
@@ -17,10 +18,11 @@ use Drupal\taxonomy\Entity\Term;
  * @ViewsDisplay(
  *   id = "field_block_filter_block",
  *   title = @Translation("Block Overrides"),
- *   help = @Translation("Allows block displays to override block configuration.
+ *   help = @Translation("Allows block displays to override block
+ *   configuration.
  *   "), theme = "views_view", register_theme = FALSE, uses_hook_block
- *   = TRUE, contextual_links_locations = {"block"}, admin = @Translation("Overrides
- *   Block")
+ *   = TRUE, contextual_links_locations = {"block"}, admin =
+ *   @Translation("Overrides Block")
  * )
  *
  * @see \Drupal\views\Plugin\block\block\ViewsBlock
@@ -201,7 +203,7 @@ class BlockOverrides extends Block {
    * Define a text form input.
    */
   public function getTextfieldElement($id, $handler, $default_value) {
-    return  [
+    return [
       '#title' => $this->t('Value for %label', ['%label' => $handler->definition['title']]),
       '#type' => 'textfield',
       '#default_value' => $default_value,
@@ -212,7 +214,7 @@ class BlockOverrides extends Block {
    * Define a select form input.
    */
   public function getOptionsElement($handler, $default_value, $options) {
-    return  [
+    return [
       '#title' => $this->t('Value for %label', ['%label' => $handler->definition['title']]),
       '#type' => 'select',
       '#options' => $options,
@@ -253,7 +255,9 @@ class BlockOverrides extends Block {
       }
       $terms = Term::loadMultiple($query->execute());
       foreach ($terms as $term) {
-        $values[$term->id()] = \Drupal::entityManager()->getTranslationFromContext($term)->label();
+        $values[$term->id()] = \Drupal::entityManager()
+          ->getTranslationFromContext($term)
+          ->label();
       }
     }
 
@@ -280,6 +284,38 @@ class BlockOverrides extends Block {
             ->loadTree($bundle);
           foreach ($terms as $term) {
             $values[$term->tid] = $term->name;
+          }
+        }
+        break;
+      // TODO more generic way to work with other entity types as well.
+      case "entity:node":
+        list($entity, $entity_type) = explode(':', $validation_type);
+        $options = $handler->options;
+        $validate_bundles = $options['validate_options']['bundles'];
+        $values = [
+          $options['exception']['value'] => $options['exception']['title'],
+        ];
+        $selection_plugin_manager = \Drupal::service('plugin.manager.entity_reference_selection');
+        switch ($entity_type) {
+          case "node":
+            $selection_plugin_id = implode(':', ['default', $entity_type]);
+            break;
+          default:
+            $selection_plugin_id = FALSE;
+            break;
+        }
+        $plugin_configuration = [
+          'target_type' => $entity_type,
+          'target_bundles' => $validate_bundles,
+        ];
+
+        $entities = [];
+        if ($selection_plugin_id && ($selection_plugin = $selection_plugin_manager->createInstance($selection_plugin_id, $plugin_configuration)) && $selection_plugin->getPluginId() != 'broken') {
+          $entities = $selection_plugin->getReferenceableEntities();
+        }
+        foreach ($entities as $bundle => $entities) {
+          foreach ($entities as $id => $label) {
+            $values[$id] = $label . " ($id, $bundle)";
           }
         }
         break;
