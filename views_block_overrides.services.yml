@@ -1,0 +1,4 @@
+services:
+  plugin.manager.views_block_configuration_plugin:
+    class: Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPluginManager
+    parent: default_plugin_manager

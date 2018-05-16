@@ -1,7 +1,11 @@
 <?php
 
 use Drupal\Core\Form\FormStateInterface;
-
+use Drupal\views\Plugin\Block\ViewsBlock;
+use Drupal\views\Plugin\views\display\Block as CoreBlock;
+use Drupal\ctools_views\Plugin\Display\Block as CtoolsBlock;
+use Drupal\views_block_overrides\Plugin\views\display\CtoolsBlockOverrides;
+use Drupal\views_block_overrides\Plugin\Block\ViewsBlockOverride;
 /**
  *  Implements hook_field_widget_FIELD-ID_FORM_alter().
  *
@@ -24,8 +28,43 @@ function views_block_overrides_field_widget_block_field_default_form_alter(&$ele
     ];
     foreach ($hiden_elements as $name) {
       if (isset($element['settings'][$name])) {
-        $element['settings'][$name]['#access'] = FALSE;
+      //  $element['settings'][$name]['#access'] = FALSE;
       }
     }
+  }
+}
+
+/**
+ * Implements hook_views_plugins_display_alter().
+ */
+function views_block_overrides_views_plugins_display_alter(&$displays) {
+//  if (!empty($displays['block']['class']) && $displays['block']['class'] == CtoolsBlock::class) {
+//    $displays['block']['class'] = CtoolsBlockOverrides::class;
+//  }
+}
+
+/**
+ * Implements hook_block_alter().
+ */
+function views_block_overrides_block_alter(&$definitions) {
+  foreach ($definitions as &$definition) {
+    if (!empty($definition['class']) && $definition['class'] == ViewsBlock::class) {
+      // Alter all the views blocks to use the extended ViewsBlockOverride block
+      // type. This new class extends the basic ViewsBlock but injects the block
+      // instance in the view object.
+      // See class Drupal\views_block_overrides\Plugin\Block\ViewsBlockOverride
+      $definition['class'] = ViewsBlockOverride::class;
+      $definition['provider'] = 'views_block_overrides';
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for views template.
+ */
+function views_block_overrides_preprocess(&$variables) {
+  if (isset($variables['view']->views_block_overrides['block_instance'])) {
+    $configuration = $variables['view']->views_block_overrides['block_instance']->getConfiguration();
+    $variables['views_block_overrides']['configuration'] = $configuration;
   }
 }
