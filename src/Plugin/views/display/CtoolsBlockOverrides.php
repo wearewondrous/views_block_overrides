@@ -115,13 +115,9 @@ class CtoolsBlockOverrides extends CtoolBlock {
 
     $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
     foreach ($plugin_definitions as $id => $definition) {
+      /** @var \Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPluginInterface $plugin */
       $plugin = $this->getViewsBlockConfigurationInstance($id);
-      if ($allowed_values = $plugin->optionsSummary($categories, $options)) {
-        $options['allow']['value'] = implode(', ', [
-          $options['allow']['value'],
-          implode(', ', $allowed_values)
-        ]);
-      }
+      $plugin->optionsSummary($categories, $options);
     }
   }
 
@@ -134,8 +130,21 @@ class CtoolsBlockOverrides extends CtoolBlock {
     $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
     foreach ($plugin_definitions as $id => $definition) {
       $plugin = $this->getViewsBlockConfigurationInstance($id);
-      $options = $plugin->buildOptionsForm($form, $form_state);
-      $form['allow']['#options'] += $options;
+      $plugin->buildOptionsForm($form, $form_state);
+    }
+  }
+
+  /**
+   * Perform any necessary changes to the form values prior to storage.
+   * There is no need for this function to actually store the data.
+   */
+  public function submitOptionsForm(&$form, FormStateInterface $form_state) {
+    parent::submitOptionsForm($form, $form_state);
+
+    $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
+    foreach ($plugin_definitions as $id => $definition) {
+      $plugin = $this->getViewsBlockConfigurationInstance($id);
+      $plugin->submitOptionsForm($form, $form_state);
     }
   }
 

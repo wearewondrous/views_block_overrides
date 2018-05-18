@@ -62,26 +62,39 @@ abstract class ViewsBlockConfigurationPluginBase extends PluginBase implements V
   /**
    * {@inheritdoc}
    */
-  public function optionsSummary($categories, $options) {
+  public function optionsSummary(&$categories, &$options) {
     $view_display = $this->configuration['view_display'];
 
     $filtered_allow = array_filter($view_display->getOption('allow'));
     $allowed_values = [];
 
     if (isset($filtered_allow[$this->pluginId])) {
-      $allowed_values[] = $this->getTitle();
+      $options['allow']['value'] = empty($options['allow']['value'])
+      ? $this->getTitle()
+      : implode(', ', [
+          $options['allow']['value'],
+          $this->getTitle()
+        ]);
     }
-
-    return $allowed_values;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildOptionsForm($form, FormStateInterface $form_state) {
-    return [
-      $this->pluginId => $this->getTitle()
-    ];
+  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+    $form['allow']['#options'][$this->pluginId] = $this->getTitle();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitOptionsForm(&$form, FormStateInterface $form_state) {
+    $section = $form_state->get('section');
+    switch ($section) {
+      case $this->pluginId:
+        $this->configuration['view_display']->setOption($section, $form_state->getValue($section));
+        break;
+    }
   }
 
   /**

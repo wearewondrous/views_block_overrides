@@ -24,16 +24,22 @@ interface ViewsBlockConfigurationPluginInterface extends PluginInspectionInterfa
   public function defineOptions();
 
   /**
-   * Provide the default form for setting options.
-   */
-  public function buildOptionsForm($form, FormStateInterface $form_state);
-
-  /**
    * Provide the summary for page options in the views UI.
    *
    * This output is returned as an array.
    */
-  public function optionsSummary($categories, $options);
+  public function optionsSummary(&$categories, &$options);
+
+  /**
+   * Provide the default form for setting options.
+   */
+  public function buildOptionsForm(&$form, FormStateInterface $form_state);
+
+  /**
+   * Perform any necessary changes to the form values prior to storage.
+   * There is no need for this function to actually store the data.
+   */
+  public function submitOptionsForm(&$form, FormStateInterface $form_state);
 
   /**
    * Returns plugin-specific settings for the block.
