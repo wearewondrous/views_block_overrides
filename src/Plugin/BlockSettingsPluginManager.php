@@ -9,11 +9,11 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 /**
  * Provides the Views block configuration plugin plugin manager.
  */
-class ViewsBlockConfigurationPluginManager extends DefaultPluginManager {
+class BlockSettingsPluginManager extends DefaultPluginManager {
 
 
   /**
-   * Constructs a new ViewsBlockConfigurationPluginManager object.
+   * Constructs a new BlockSettingsPluginManager object.
    *
    * @param \Traversable $namespaces
    *   An object that implements \Traversable which contains the root paths
@@ -24,9 +24,9 @@ class ViewsBlockConfigurationPluginManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/ViewsBlockConfigurationPlugin', $namespaces, $module_handler, 'Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPluginInterface', 'Drupal\views_block_overrides\Annotation\ViewsBlockConfigurationPlugin');
+    parent::__construct('Plugin/BlockSettings', $namespaces, $module_handler, 'Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface', 'Drupal\views_block_overrides\Annotation\BlockSettings');
 
-    $this->alterInfo('views_block_overrides_views_block_configuration_plugin_info');
-    $this->setCacheBackend($cache_backend, 'views_block_overrides_views_block_configuration_plugin_plugins');
+    $this->alterInfo('views_block_overrides_block_settings_info');
+    $this->setCacheBackend($cache_backend, 'views_block_overrides_block_settings');
   }
 }

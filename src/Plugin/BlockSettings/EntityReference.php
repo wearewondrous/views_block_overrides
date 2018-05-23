@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPlugin;
+namespace Drupal\views_block_overrides\Plugin\BlockSettings;
 
-use Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPluginBase;
+use Drupal\views_block_overrides\Plugin\BlockSettingsPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\Block\ViewsBlock;
 use Drupal\node\Entity\Node;
@@ -12,12 +12,13 @@ use Drupal\Component\Utility\NestedArray;
  * A views block configuration plugin that allows to pass exposed filters as
  * block configuration configuration.
  *
- * @ViewsBlockConfigurationPlugin(
+ * @BlockSettings(
  *   id = "entity_reference",
  *   title = @Translation("Entity reference"),
+ *   area = true
  * )
  */
-class EntityReference extends ViewsBlockConfigurationPluginBase {
+class EntityReference extends BlockSettingsPluginBase {
 
   use EntityReferenceTrait;
 
@@ -81,23 +82,6 @@ class EntityReference extends ViewsBlockConfigurationPluginBase {
     parent::buildOptionsForm($form, $form_state);
 
     $this->buildEntityReferenceSettingsForm($form, $form_state);
-  }
-
-  /**
-   * Entity reference Ajax callback.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   *
-   * @return array
-   *   The properties element.
-   */
-  public static function entityReferenceAjaxCallback(array $form, FormStateInterface $form_state) {
-    $button = $form_state->getTriggeringElement();
-    $element = NestedArray::getValue($form, array_slice($button['#array_parents'], 0, -1));
-    return $element;
   }
 
   /**

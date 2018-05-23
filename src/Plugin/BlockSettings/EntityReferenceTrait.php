@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPlugin;
+namespace Drupal\views_block_overrides\Plugin\BlockSettings;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Html;
@@ -20,12 +20,12 @@ trait EntityReferenceTrait {
       case $this->pluginId:
         $settings = $this->configuration['view_display']->getOption($this->pluginId);
 
-//        if ($values = $form_state->getValue($section)) {
-//          $target_type = (!empty($values['target_type'])) ? $values['target_type'] : 'node';
-//          $selection_handler = 'default:' . $target_type;
-//          $selection_settings = [];
-//        }
-//        else
+        //        if ($values = $form_state->getValue($section)) {
+        //          $target_type = (!empty($values['target_type'])) ? $values['target_type'] : 'node';
+        //          $selection_handler = 'default:' . $target_type;
+        //          $selection_settings = [];
+        //        }
+        //        else
         if (($user_input = $form_state->getUserInput()) && isset($user_input[$this->pluginId])) {
           $target_type = (!empty($user_input[$this->pluginId]['target_type'])) ? $user_input[$this->pluginId]['target_type'] : 'node';
           $selection_handler = (!empty($user_input[$this->pluginId]['selection_handler'])) ? $user_input[$this->pluginId]['selection_handler'] : 'default:' . $target_type;
@@ -44,6 +44,18 @@ trait EntityReferenceTrait {
           $selection_settings = [];
           NestedArray::setValue($form_state->getUserInput(), [$this->pluginId, 'selection_handler'], $selection_handler);
           NestedArray::setValue($form_state->getUserInput(), [$this->pluginId, 'selection_settings'], $selection_settings);
+        }
+
+        // Set 'User' entity reference selection filter type role's #default_value
+        // to an array and not NULL, which throws
+        // "Warning: Invalid argument supplied for foreach()
+        // in Drupal\Core\Render\Element\Checkboxes::valueCallback()"
+        // @see \Drupal\user\Plugin\EntityReferenceSelection\UserSelection::buildConfigurationForm
+        if ($target_type == 'user'
+          && isset($selection_settings['filter']['type'])
+          && $selection_settings['filter']['type'] == 'role'
+          && empty($selection_settings['filter']['role'])) {
+          $selection_settings['filter']['role'] = [];
         }
 
         /** @var \Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManagerInterface $entity_reference_selection_manager */
@@ -95,6 +107,8 @@ trait EntityReferenceTrait {
           '#title' => $this->t('Reference method'),
           '#options' => $handlers_options,
           '#required' => TRUE,
+          '#validated' => TRUE,
+          '#value' => $selection_handler,
           '#default_value' => $selection_handler,
           '#ajax' => [
             'callback' => [get_called_class(), 'entityReferenceAjaxCallback'],
@@ -128,9 +142,37 @@ trait EntityReferenceTrait {
           );
         }
 
+        $custom_validation = [
+          '#selection_settings' => $selection_settings,
+          '#plugin_id' => $this->pluginId,
+          '#element_validate' => [
+            [get_class($this), 'validateSelection']
+          ],
+        ];
+
+        $subform['entity_reference']['selection_settings']['target_bundles'] = array_merge_recursive($subform['entity_reference']['selection_settings']['target_bundles'], $custom_validation);
+        $subform['entity_reference']['selection_settings']['sort']['field'] = array_merge_recursive($subform['entity_reference']['selection_settings']['sort']['field'], $custom_validation);;
+
         break;
     }
     $form[$this->pluginId] = $subform;
+    $form_state->setCached(FALSE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function validateSelection(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+    $key = $form['#plugin_id'];
+    if (isset($values[$key]['selection_settings']['target_bundles']) && empty($values[$key]['selection_settings']['target_bundles']) && isset($form['#selection_settings'])) {
+      unset($values[$key]['selection_settings']['target_bundles']);
+    }
+    if (isset($values[$key]['selection_settings']['sort']['field']) && $values[$key]['selection_settings']['sort']['field'] == '_none') {
+      unset($values[$key]['selection_settings']['sort']);
+    }
+
+    $form_state->setValues($values);
   }
 
   /**

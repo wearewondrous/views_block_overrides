@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPlugin;
+namespace Drupal\views_block_overrides\Plugin\BlockSettings;
 
-use Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPluginBase;
+use Drupal\views_block_overrides\Plugin\BlockSettingsPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\Block\ViewsBlock;
 use Drupal\views\Views;
@@ -12,13 +12,14 @@ use Drupal\views_block_overrides\Plugin\views\row\EntityRowWithDynamicFormat;
  * A views block configuration plugin that allows to pass exposed filters as
  * block configuration configuration.
  *
- * @ViewsBlockConfigurationPlugin(
+ * @BlockSettings(
  *   id = "dynamic_format",
  *   title = @Translation("Dynamic Format"),
- *   view_display = NULL
+ *   view_display = NULL,
+ *   area = false
  * )
  */
-class DynamicFormat extends ViewsBlockConfigurationPluginBase {
+class DynamicFormat extends BlockSettingsPluginBase {
 
   /**
    * {@inheritdoc}

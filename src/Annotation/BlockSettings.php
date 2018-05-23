@@ -7,12 +7,12 @@ use Drupal\Component\Annotation\Plugin;
 /**
  * Defines a Views block configuration plugin item annotation object.
  *
- * @see \Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPluginManager
+ * @see \Drupal\views_block_overrides\Plugin\BlockSettingsPluginManager
  * @see plugin_api
  *
  * @Annotation
  */
-class ViewsBlockConfigurationPlugin extends Plugin {
+class BlockSettings extends Plugin {
 
 
   /**
@@ -44,5 +44,12 @@ class ViewsBlockConfigurationPlugin extends Plugin {
    * @var object
    */
   public $view;
+
+  /**
+   * Defines if the plugin uses the area plugin.
+   *
+   * @var bool
+   */
+  public $area;
 
 }

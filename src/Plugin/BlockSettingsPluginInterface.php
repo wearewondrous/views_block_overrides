@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 /**
  * Defines an interface for Views block configuration plugin plugins.
  */
-interface ViewsBlockConfigurationPluginInterface extends PluginInspectionInterface {
+interface BlockSettingsPluginInterface extends PluginInspectionInterface {
 
   /**
    * Return the name of the reusable form plugin.
@@ -17,6 +17,13 @@ interface ViewsBlockConfigurationPluginInterface extends PluginInspectionInterfa
    * @return string
    */
   public function getTitle();
+
+  /**
+   * Checks if the plugin uses the area plugin.
+   *
+   * @return bool
+   */
+  public function areaEnabled();
 
   /**
    * {@inheritdoc}
@@ -94,4 +101,56 @@ interface ViewsBlockConfigurationPluginInterface extends PluginInspectionInterfa
    */
   public function preBlockBuild(ViewsBlock $block);
 
+
+  /**
+   * Builds the area options.
+   *
+   * @param array $options
+   *   The modified options array.
+   * @param array $context
+   *   The context array containing the area object.
+   *
+   * @return array $options
+   *   The modified options array.
+   */
+  public function defineAreaOptions(array $options, array $context);
+
+  /**
+   * Builds the area options form.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state object.
+   */
+  public function buildAreaOptionsForm(array &$form, FormStateInterface $form_state);
+
+  /**
+   * Builds the area render array.
+   *
+   * @param $context
+   *   The context array containing the area object.
+   *
+   * @return array
+   *   The render array.
+   */
+  public function renderArea(array $context);
+
+  /**
+   * Gets the block instance settings.
+   */
+  public function getBlockSettings();
+
+  /**
+   * Get's the block instance object.
+   */
+  public function getBlockInstance();
+
+  /**
+   * Checks if the config plugin is allowed form the views settings.
+   *
+   * @return bool
+   *   TRUE if it's allowed
+   */
+  public function isAllowed();
 }

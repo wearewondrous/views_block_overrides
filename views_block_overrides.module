@@ -68,3 +68,26 @@ function views_block_overrides_preprocess(&$variables) {
     $variables['views_block_overrides']['configuration'] = $configuration;
   }
 }
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function views_block_overrides_views_data_alter(array &$data) {
+  /** @var Drupal\views_block_overrides\Plugin\BlockSettingsPluginManager $block_settings_manager */
+  $block_settings_manager = \Drupal::service('plugin.manager.block_settings');
+  /** @var  Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface $definition */
+  foreach ($block_settings_manager->getDefinitions() as $definition_id => $definition) {
+    if ($definition['area'] != TRUE) {
+      continue;
+    }
+    $key = 'views_block_overrides_' . $definition_id;
+    $data['views'][$key] = [
+      'title' => t('Views block overrides - @plugin_title', ['@plugin_title' => $definition['title']]),
+      'help' => t('Views block override block settings area.'),
+      'area' => [
+        'id' => 'views_block_overrides_area',
+        'block_settings_plugin_id' => $definition_id,
+      ],
+    ];
+  }
+}

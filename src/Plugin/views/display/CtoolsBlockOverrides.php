@@ -31,7 +31,7 @@ class CtoolsBlockOverrides extends CtoolBlock {
   /**
    * The entity manager.
    *
-   * @var \Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPluginManager
+   * @var \Drupal\views_block_overrides\Plugin\BlockSettingsPluginManager
    */
   protected $configurationPluginManager;
 
@@ -60,7 +60,7 @@ class CtoolsBlockOverrides extends CtoolBlock {
       $plugin_id,
       $plugin_definition,
       $container->get('entity.manager'),
-      $container->get('plugin.manager.views_block_configuration_plugin')
+      $container->get('plugin.manager.block_settings')
     );
   }
 
@@ -69,7 +69,7 @@ class CtoolsBlockOverrides extends CtoolBlock {
    *
    * @return array|mixed[]|null
    */
-  public function getViewsBlockConfigurationDefinitions() {
+  public function getBlockSettingsDefinitions() {
     return  ($this->pluginDefinitions) ?: ($this->pluginDefinitions = $this->configurationPluginManager->getDefinitions());
   }
 
@@ -83,7 +83,7 @@ class CtoolsBlockOverrides extends CtoolBlock {
    *
    * @return object
    */
-  public function getViewsBlockConfigurationInstance($plugin_id, $settings = []) {
+  public function getBlockSettingsInstance($plugin_id, $settings = []) {
     $plugin_settings = $settings + [
       'view_display' => $this,
     ];
@@ -96,9 +96,9 @@ class CtoolsBlockOverrides extends CtoolBlock {
   protected function defineOptions() {
     $options = parent::defineOptions();
 
-    $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
+    $plugin_definitions = $this->getBlockSettingsDefinitions();
     foreach ($plugin_definitions as $id => $definition) {
-      $plugin = $this->getViewsBlockConfigurationInstance($id);
+      $plugin = $this->getBlockSettingsInstance($id);
       $options = array_merge_recursive($options, $plugin->defineOptions());
     }
 
@@ -113,10 +113,13 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function optionsSummary(&$categories, &$options) {
     parent::optionsSummary($categories, $options);
 
-    $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
+    $plugin_definitions = $this->getBlockSettingsDefinitions();
     foreach ($plugin_definitions as $id => $definition) {
-      /** @var \Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPluginInterface $plugin */
-      $plugin = $this->getViewsBlockConfigurationInstance($id);
+      if (!$this->isAllowed($id)) {
+        continue;
+      }
+      /** @var \Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface $plugin */
+      $plugin = $this->getBlockSettingsInstance($id);
       $plugin->optionsSummary($categories, $options);
     }
   }
@@ -127,9 +130,9 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
+    $plugin_definitions = $this->getBlockSettingsDefinitions();
     foreach ($plugin_definitions as $id => $definition) {
-      $plugin = $this->getViewsBlockConfigurationInstance($id);
+      $plugin = $this->getBlockSettingsInstance($id);
       $plugin->buildOptionsForm($form, $form_state);
     }
   }
@@ -141,9 +144,9 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function submitOptionsForm(&$form, FormStateInterface $form_state) {
     parent::submitOptionsForm($form, $form_state);
 
-    $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
+    $plugin_definitions = $this->getBlockSettingsDefinitions();
     foreach ($plugin_definitions as $id => $definition) {
-      $plugin = $this->getViewsBlockConfigurationInstance($id);
+      $plugin = $this->getBlockSettingsInstance($id);
       $plugin->submitOptionsForm($form, $form_state);
     }
   }
@@ -163,9 +166,9 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function blockSettings(array $settings) {
     $settings = parent::blockSettings($settings);
 
-    $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
+    $plugin_definitions = $this->getBlockSettingsDefinitions();
     foreach ($plugin_definitions as $id => $definition) {
-      $plugin = $this->getViewsBlockConfigurationInstance($id);
+      $plugin = $this->getBlockSettingsInstance($id);
       $settings = array_merge_recursive($settings, $plugin->blockSettings($settings));
     }
 
@@ -190,12 +193,12 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function blockForm(ViewsBlock $block, array &$form, FormStateInterface $form_state) {
     $form = parent::blockForm($block, $form, $form_state);
 
-    $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
+    $plugin_definitions = $this->getBlockSettingsDefinitions();
     foreach ($plugin_definitions as $id => $definition) {
       if (!$this->isAllowed($id)) {
         continue;
       }
-      $plugin = $this->getViewsBlockConfigurationInstance($id);
+      $plugin = $this->getBlockSettingsInstance($id);
       $form = array_merge_recursive($form, $plugin->blockForm($block, $form, $form_state));
     }
 
@@ -217,13 +220,13 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function blockSubmit(ViewsBlock $block, $form, FormStateInterface $form_state) {
     parent::blockSubmit($block, $form, $form_state);
 
-    $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
+    $plugin_definitions = $this->getBlockSettingsDefinitions();
     $config = $block->getConfiguration();
     foreach ($plugin_definitions as $id => $definition) {
       if (!$this->isAllowed($id)) {
         continue;
       }
-      $plugin = $this->getViewsBlockConfigurationInstance($id);
+      $plugin = $this->getBlockSettingsInstance($id);
       $config[$id] = $plugin->blockSubmit($block, $form, $form_state);
     }
     $block->setConfiguration($config);
@@ -238,12 +241,12 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function preBlockBuild(ViewsBlock $block) {
     parent::preBlockBuild($block);
 
-    $plugin_definitions = $this->getViewsBlockConfigurationDefinitions();
+    $plugin_definitions = $this->getBlockSettingsDefinitions();
     foreach ($plugin_definitions as $id => $definition) {
       if (!$this->isAllowed($id)) {
         continue;
       }
-      $plugin = $this->getViewsBlockConfigurationInstance($id);
+      $plugin = $this->getBlockSettingsInstance($id);
       $plugin->preBlockBuild($block);
     }
   }

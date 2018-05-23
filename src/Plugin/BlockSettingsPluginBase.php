@@ -10,7 +10,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 /**
  * Base class for Views block configuration plugin plugins.
  */
-abstract class ViewsBlockConfigurationPluginBase extends PluginBase implements ViewsBlockConfigurationPluginInterface {
+abstract class BlockSettingsPluginBase extends PluginBase implements BlockSettingsPluginInterface {
 
   use StringTranslationTrait;
 
@@ -40,6 +40,13 @@ abstract class ViewsBlockConfigurationPluginBase extends PluginBase implements V
   /**
    * {@inheritdoc}
    */
+  public function areaEnabled() {
+    return $this->pluginDefinition['area'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getView() {
     return $this->pluginDefinition['view'];
   }
@@ -55,7 +62,7 @@ abstract class ViewsBlockConfigurationPluginBase extends PluginBase implements V
    * {@inheritdoc}
    */
   public function defineOptions() {
-    $options['allow']['contains'][$this->pluginId] = ['default' => $this->pluginId];
+    $options['allow']['contains'][$this->pluginId] = ['default' => 0];
     return $options;
   }
 
@@ -66,8 +73,6 @@ abstract class ViewsBlockConfigurationPluginBase extends PluginBase implements V
     $view_display = $this->configuration['view_display'];
 
     $filtered_allow = array_filter($view_display->getOption('allow'));
-    $allowed_values = [];
-
     if (isset($filtered_allow[$this->pluginId])) {
       $options['allow']['value'] = empty($options['allow']['value'])
       ? $this->getTitle()
@@ -125,5 +130,61 @@ abstract class ViewsBlockConfigurationPluginBase extends PluginBase implements V
   public function preBlockBuild(ViewsBlock $block) {
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function defineAreaOptions(array $options, array $context) {
+    return $options;
+  }
 
+  /**
+   * {@inheritdoc
+   */
+  public function buildAreaOptionsForm(array &$form, FormStateInterface $form_state) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderArea(array $context) {
+    if (!$this->isAllowed()) {
+      return [];
+    }
+
+    $view = $this->configuration['view_display']->view;
+    $area_id = $context['area']->options['id'];
+    $block_settings = $this->getBlockSettings();
+    $theme = [$view->current_display, $area_id];
+
+    return [
+      '#theme' => implode('_', $theme),
+      '#block_settings' => $block_settings,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockSettings() {
+    if (!($block_instance = $this->getBlockInstance())) {
+      return NULL;
+    }
+    $block_settings = $block_instance->getConfiguration();
+    return isset($block_settings[$this->pluginId]) ? $block_settings[$this->pluginId] : [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBlockInstance() {
+    $view = $this->configuration['view_display']->view;
+    return (isset($view->views_block_overrides['block_instance'])) ? $view->views_block_overrides['block_instance'] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isAllowed() {
+    return $this->configuration['view_display']->isAllowed($this->pluginId);
+  }
 }

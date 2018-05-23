@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPlugin;
+namespace Drupal\views_block_overrides\Plugin\BlockSettings;
 
-use Drupal\views_block_overrides\Plugin\ViewsBlockConfigurationPluginBase;
+use Drupal\views_block_overrides\Plugin\BlockSettingsPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\Block\ViewsBlock;
 use Drupal\views\Views;
@@ -13,19 +13,20 @@ use Drupal\node\Entity\Node;
  * A views block configuration plugin that allows to pass exposed filters as
  * block configuration configuration.
  *
- * @ViewsBlockConfigurationPlugin(
- *   id = "inline_entity",
- *   title = @Translation("Inline entity"),
+ * @BlockSettings(
+ *   id = "node_reference",
+ *   title = @Translation("Node reference"),
+ *   area = true
  * )
  */
-class InlineEntity extends ViewsBlockConfigurationPluginBase {
+class NodeReference extends BlockSettingsPluginBase {
 
   /**
    * {@inheritdoc}
    */
   public function blockSettings(array $settings) {
     $settings = parent::blockSettings($settings);
-    $settings[$this->pluginId]['target_entity'] = NULL;
+    $settings[$this->pluginId]['reference'] = NULL;
 
     return $settings;
   }
@@ -42,23 +43,15 @@ class InlineEntity extends ViewsBlockConfigurationPluginBase {
       $default_value = Node::load($block_configuration[$this->pluginId]['reference'][0]['target_id']);
     }
 
-    $form['override'][$this->pluginId]['target_entity'] = [
-      '#type' => 'inline_entity_form',
-      '#entity_type' => 'block_overrides',
-       '#bundle' => 'achievements',
-       // If the #default_value is NULL, a new entity will be created.
-       '#default_value' => $default_value,
-    ];
+    $form['override'][$this->pluginId]['reference'] = array(
+      '#title' => $this->t('Node reference'),
+      '#type' => 'entity_autocomplete',
+      '#target_type' => 'node',
+      '#tags' => TRUE,
+      '#default_value' => $default_value,
+    );
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function blockSubmit(ViewsBlock $block, $form, FormStateInterface $form_state) {
-    $values = $form_state->getValue(['override']);
-    return isset($values[$this->pluginId]) ? $values[$this->pluginId] : NULL;
   }
 
 }

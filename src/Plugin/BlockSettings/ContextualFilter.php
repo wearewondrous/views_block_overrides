@@ -1,77 +1,35 @@
 <?php
 
-namespace Drupal\views_block_overrides\Plugin\views\display;
+namespace Drupal\views_block_overrides\Plugin\BlockSettings;
 
+use Drupal\views_block_overrides\Plugin\BlockSettingsPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\Block\ViewsBlock;
-use Drupal\views\Plugin\views\display\Block;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\taxonomy\Entity\Term;
 
 /**
- * A block plugin that allows exposed filters to be configured.
+ * A views block configuration plugin that allows to pass exposed filters as
+ * block configuration configuration.
  *
- * @deprecated this class will be removed, kept only for backward compatibility
- *
- * @ingroup view_display_plugins
- *
- * @ViewsDisplay(
- *   id = "field_block_filter_block",
- *   title = @Translation("Block Overrides"),
- *   help = @Translation("Allows block displays to override block
- *   configuration.
- *   "), theme = "views_view", register_theme = FALSE, uses_hook_block
- *   = TRUE, contextual_links_locations = {"block"}, admin =
- *   @Translation("Overrides Block")
+ * @BlockSettings(
+ *   id = "contextual_filter",
+ *   title = @Translation("Contextual Filter"),
+ *   view_display = NULL,
+ *   area = false
  * )
- *
- * @see \Drupal\views\Plugin\block\block\ViewsBlock
- * @see \Drupal\views\Plugin\Derivative\ViewsBlock
  */
-class BlockOverrides extends Block {
+class ContextualFilter extends BlockSettingsPluginBase {
 
   /**
    * {@inheritdoc}
    */
-  protected function defineOptions() {
-    $options = parent::defineOptions();
-    $options['allow']['contains']['exposed_filter'] = ['default' => 'exposed_filter'];
-    $options['allow']['contains']['exposed_sort'] = ['default' => 'exposed_sort'];
-    $options['allow']['contains']['contextual_filter'] = ['default' => 'contextual_filter'];
-    return $options;
-  }
-
-  /**
-   * Returns plugin-specific settings for the block.
-   *
-   * @param array $settings
-   *   The settings of the block.
-   *
-   * @return array
-   *   An array of block-specific settings to override the defaults provided in
-   *   \Drupal\views\Plugin\Block\ViewsBlock::defaultConfiguration().
-   *
-   * @see \Drupal\views\Plugin\Block\ViewsBlock::defaultConfiguration()
-   */
   public function blockSettings(array $settings) {
     $settings = parent::blockSettings($settings);
-    $settings['exposed_filter'] = [];
-
-    // These items must be exposed to be overriden.
-    foreach (['filter', 'sort'] as $type) {
-      $items = $this->view->display_handler->getHandlers($type);
-      foreach ($items as $id => $item) {
-        if (!$item->options['exposed']) {
-          continue;
-        }
-        $settings['exposed_' . $type][$id]['enabled'] = FALSE;
-        $settings['exposed_' . $type][$id]['value'] = '';
-      }
-    }
 
     // All contextual filters can be overridden.
-    $contextual_filters = $this->view->display_handler->getHandlers('argument');
+    $contextual_filters = $this->getView()->display_handler->getHandlers('argument');
     foreach ($contextual_filters as $id => $contextual_filter) {
       $settings['contextual_filter'][$id]['enabled'] = FALSE;
       $settings['contextual_filter'][$id]['value'] = '';
@@ -80,57 +38,12 @@ class BlockOverrides extends Block {
   }
 
   /**
-   * Provide the summary for page options in the views UI.
-   *
-   * This output is returned as an array.
+   * {@inheritdoc}
    */
-  public function optionsSummary(&$categories, &$options) {
-    parent::optionsSummary($categories, $options);
+  public function blockForm(ViewsBlock $block, array $form, FormStateInterface $form_state) {
+    $form = parent::blockForm($block, $form, $form_state);
 
-    // @todo: make this more general and not reliant on the fact that
-    // items_per_page is currently the only allowed block config setting.
-    $filtered_allow = array_filter($this->getOption('allow'));
-    $allowed = [];
-    if (isset($filtered_allow['items_per_page'])) {
-      $allowed[] = $this->t('Items per page');
-    }
-    if (isset($filtered_allow['exposed_filter'])) {
-      $allowed[] = $this->t('Exposed filters');
-    }
-    if (isset($filtered_allow['exposed_sort'])) {
-      $allowed[] = $this->t('Exposed sorts');
-    }
-    if (isset($filtered_allow['contextual_filter'])) {
-      $allowed[] = $this->t('Contextual filters');
-    }
-    $options['allow'] = [
-      'category' => 'block',
-      'title' => $this->t('Allow settings'),
-      'value' => empty($allowed) ? $this->t('None') : implode(', ', $allowed),
-    ];
-  }
-
-  /**
-   * Adds the configuration form elements specific to this views block plugin.
-   *
-   * This method allows block instances to override the views exposed filters.
-   *
-   * @param \Drupal\views\Plugin\Block\ViewsBlock $block
-   *   The ViewsBlock plugin.
-   * @param array $form
-   *   The form definition array for the block configuration form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   *
-   * @return array $form
-   *   The renderable form array representing the entire configuration form.
-   *
-   * @see \Drupal\views\Plugin\Block\ViewsBlock::blockForm()
-   */
-  public function blockForm(ViewsBlock $block, array &$form, FormStateInterface $form_state) {
-    parent::blockForm($block, $form, $form_state);
-
-    $allow_settings = array_filter($this->getOption('allow'));
+    $allow_settings = array_filter($this->getViewDisplay()->getOption('allow'));
     $block_configuration = $block->getConfiguration();
 
     foreach ($allow_settings as $type => $enabled) {
@@ -139,17 +52,9 @@ class BlockOverrides extends Block {
       }
 
       switch ($type) {
-        case "exposed_filter":
-          $handlers = $this->view->display_handler->getHandlers('filter');
-          $label = $this->t('Use exposed filter');
-          break;
         case "contextual_filter":
-          $handlers = $this->view->display_handler->getHandlers('argument');
+          $handlers = $this->getView()->display_handler->getHandlers('argument');
           $label = $this->t('Use contextual filter');
-          break;
-        case "exposed_sort":
-          $handlers = $this->view->display_handler->getHandlers('sort');
-          $label = $this->t('Use contextual filter exposed sort');
           break;
         default:
           // Continue the loop.
@@ -175,9 +80,6 @@ class BlockOverrides extends Block {
         $default_value = $block_configuration[$type][$id]['value'] ?: NULL;
         $element = &$form['override'][$type][$id]['value'];
         switch ($type) {
-          case 'exposed_filter':
-            $value = $this->getExposedPossibleValues($id, $handler);
-            break;
           case 'contextual_filter':
             $value = $this->getContextualPossibleValues($id, $handler);
             $default_value = $default_value ?: $handler->options['exception']['value'];
@@ -214,12 +116,13 @@ class BlockOverrides extends Block {
   /**
    * Define a select form input.
    */
-  public function getOptionsElement($handler, $default_value, $options) {
+  public function getOptionsElement($handler, $default_value, $options, $multiple = FALSE) {
     return [
       '#title' => $this->t('Value for %label', ['%label' => $handler->definition['title']]),
       '#type' => 'select',
       '#options' => $options,
-      '#default_value' => $default_value,
+      '#default_value' => $multiple ? explode($this->getMultiValueSeparator(), $default_value) : $default_value,
+      '#multiple' => $multiple,
     ];
   }
 
@@ -228,7 +131,7 @@ class BlockOverrides extends Block {
    */
   public function getFormElement($id, $handler, $default_value, $value) {
     if (is_array($value)) {
-      $element = $this->getOptionsElement($handler, $default_value, $value);
+      $element = $this->getOptionsElement($handler, $default_value, $value, $handler->options['break_phrase']);
     }
     else {
       $element = $this->getTextfieldElement($id, $handler, $default_value);
@@ -338,22 +241,21 @@ class BlockOverrides extends Block {
    * @see \Drupal\views\Plugin\Block\ViewsBlock::blockSubmit()
    */
   public function blockSubmit(ViewsBlock $block, $form, FormStateInterface $form_state) {
-    parent::blockSubmit($block, $form, $form_state);
+    $values = parent::blockSubmit($block, $form, $form_state);
 
-    $overides = $form_state->getValue(['override']);
-    $config = $block->getConfiguration();
-
-    foreach ($overides as $type => $values) {
-      foreach ($values as $id => $settings) {
-        $config[$type][$id] = [
-          'enabled' => $settings['enabled'],
-          'value' => $settings['value'],
-        ];
-        $form_state->unsetValue(['override', $type, $id]);
-      }
+    if (!isset($values)) {
+      return;
     }
 
-    $block->setConfiguration($config);
+    foreach ($values as $id => $settings) {
+      $config[$id] = [
+        'enabled' => $settings['enabled'],
+        'value' => is_array($settings['value']) ? implode($this->getMultiValueSeparator(), $settings['value']) : $settings['value'],
+      ];
+      $form_state->unsetValue(['override', $this->pluginId, $id]);
+    }
+
+    return $config;
   }
 
   /**
@@ -363,26 +265,7 @@ class BlockOverrides extends Block {
    *   The block plugin for views displays.
    */
   public function preBlockBuild(ViewsBlock $block) {
-    $this->setExposedFilters($block);
     $this->setContextualFilters($block);
-  }
-
-  /**
-   * Sets the exposed filters
-   */
-  public function setExposedFilters($block) {
-    $config = $block->getConfiguration();
-    $exposedInput = [];
-    foreach (['exposed_filter', 'exposed_sort'] as $type) {
-      if (!empty($config[$type])) {
-        foreach ($config[$type] as $id => $values) {
-          if ($values['enabled']) {
-            $exposedInput[$id] = $values['value'];
-          }
-        }
-      }
-    }
-    $this->view->exposed_data = $exposedInput;
   }
 
   /**
@@ -412,7 +295,7 @@ class BlockOverrides extends Block {
     // TODO Can we use string as default?
     $default = 'string';
 
-    $handler = $this->view->display_handler->getHandler('argument', $id);
+    $handler = $this->getView()->display_handler->getHandler('argument', $id);
     if (isset($handler->options['validate']['type'])) {
       $options = $handler->options;
       $validate_type = $options['validate']['type'];
@@ -421,24 +304,13 @@ class BlockOverrides extends Block {
   }
 
   /**
-   * Block views use exposed widgets only if AJAX is set.
+   * Returns the multi value separator.
+   *
+   * @return string
+   *   The separator character
    */
-  public function usesExposed() {
-    if ($this->ajaxEnabled()) {
-      return parent::usesExposed();
-    }
-    return FALSE;
-  }
-
-  /**
-   * Provide the default form for setting options.
-   */
-  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
-    parent::buildOptionsForm($form, $form_state);
-
-    if ($form_state->get('section') == 'allow') {
-      $form['allow']['#options']['exposed_filter'] = $this->t('Exposed filters');
-    }
+  public function getMultiValueSeparator() {
+    return '+';
   }
 
 }
