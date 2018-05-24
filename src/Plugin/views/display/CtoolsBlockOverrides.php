@@ -134,6 +134,9 @@ class CtoolsBlockOverrides extends CtoolBlock {
     foreach ($plugin_definitions as $id => $definition) {
       $plugin = $this->getBlockSettingsInstance($id);
       $plugin->buildOptionsForm($form, $form_state);
+      if (isset($form[$plugin->pluginId])) {
+        $form[$plugin->pluginId]['#tree'] = TRUE;
+      }
     }
   }
 

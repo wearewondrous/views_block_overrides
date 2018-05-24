@@ -113,7 +113,7 @@ interface BlockSettingsPluginInterface extends PluginInspectionInterface {
    * @return array $options
    *   The modified options array.
    */
-  public function defineAreaOptions(array $options, array $context);
+  public function defineAreaOptions(array $context);
 
   /**
    * Builds the area options form.
@@ -122,8 +122,10 @@ interface BlockSettingsPluginInterface extends PluginInspectionInterface {
    *   The form array.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state object.
+   * @param array $context
+   *   The context array.
    */
-  public function buildAreaOptionsForm(array &$form, FormStateInterface $form_state);
+  public function buildAreaOptionsForm(array &$form, FormStateInterface $form_state, array $context);
 
   /**
    * Builds the area render array.

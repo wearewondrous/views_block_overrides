@@ -133,14 +133,14 @@ abstract class BlockSettingsPluginBase extends PluginBase implements BlockSettin
   /**
    * {@inheritdoc}
    */
-  public function defineAreaOptions(array $options, array $context) {
-    return $options;
+  public function defineAreaOptions(array $context) {
+    return [];
   }
 
   /**
    * {@inheritdoc
    */
-  public function buildAreaOptionsForm(array &$form, FormStateInterface $form_state) {
+  public function buildAreaOptionsForm(array &$form, FormStateInterface $form_state, array $context) {
   }
 
   /**
@@ -179,6 +179,14 @@ abstract class BlockSettingsPluginBase extends PluginBase implements BlockSettin
   public function getBlockInstance() {
     $view = $this->configuration['view_display']->view;
     return (isset($view->views_block_overrides['block_instance'])) ? $view->views_block_overrides['block_instance'] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDisplayOptions() {
+    $display = $this->configuration['view_display'];
+    return $display->getOption($this->pluginId);
   }
 
   /**

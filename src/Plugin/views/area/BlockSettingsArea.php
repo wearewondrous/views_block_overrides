@@ -4,10 +4,10 @@ namespace Drupal\views_block_overrides\Plugin\views\area;
 
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
 use Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
+
 /**
  * Generic area plugin to provide a common base for all BlockSettings Area plugin.
  *
@@ -19,9 +19,10 @@ class BlockSettingsArea extends AreaPluginBase {
   private $block_settings_plugin;
 
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+    // Init the block_settings_plugin before the parent::init() call, else the
+    // defineOptions() will not add the extra options.
+    $this->block_settings_plugin = $this->getBlockSettingsPluginInstance($view);
     parent::init($view, $display, $options);
-
-    $this->block_settings_plugin = $this->getBlockSettingsPluginInstance();
   }
 
   /**
@@ -36,14 +37,13 @@ class BlockSettingsArea extends AreaPluginBase {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-
     if (!$this->block_settings_plugin) {
-      return $options;
+      return FALSE;
     }
     $context = [
       'area' => $this,
     ];
-    $options = $this->block_settings_plugin->defineAreaOptions($options, $context);
+    $options += $this->block_settings_plugin->defineAreaOptions($context);
 
     return $options;
   }
@@ -84,7 +84,7 @@ class BlockSettingsArea extends AreaPluginBase {
    *
    * @return \Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface|null|object
    */
-  public function getBlockSettingsPluginInstance() {
+  public function getBlockSettingsPluginInstance($view) {
     if (!isset($this->definition['block_settings_plugin_id'])) {
       return NULL;
     }
@@ -93,7 +93,7 @@ class BlockSettingsArea extends AreaPluginBase {
     $block_settings_manager = \Drupal::service('plugin.manager.block_settings');
     /** @var  \Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface $definition */
     $plugin_settings = [
-      'view_display' => $this->view->getDisplay(),
+      'view_display' => isset($view) ? $view->getDisplay() : $this->view->getDisplay(),
     ];
     /** @var \Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface $block_settings_plugin */
     $block_settings_plugin = $block_settings_manager->createInstance($this->definition['block_settings_plugin_id'], $plugin_settings);
