@@ -9,18 +9,20 @@ Provides a new views block display (Block overrides) on top of ctools_block to a
 
 ## Configuration
 
-Module ships with a simple configuration UI which allows you to create, edit
-and delete entity browsers. 
+Create a new block display type *Block overrides* or edit your existing view YAML configuration and change the display type to  `display_plugin: views_block_overrides`
 
 - Enable ctool_blocks [Chaos tool set](https://drupal.org/project/ctools).
 - Go to views and add a new display, type of "Block overrides" to your view.
-- Check the allow settings for enabling or disabling the custom settings.
+- Check the Block overrides settings for enabling or disabling, reordering the custom block settings.
 - Additional settings can be added by implementing new @BlockSettings plugins
 
 
 ## Things you can do
 
-- enable or disable the `block settings` form the Views display > Allow Settings
+FYI, most of the features listed were tested with paragraph + block_field only (TODO: test the block settings page from the block layouts)
+
+- enable or disable, also sort the `block settings` form the Views display > Block Overrides > Settings
+- sorting the `block settings` will change the order of the form inputs on the block settings
 - configure the `block settings` on the view under Views display > Block settigs, e.g. Entity Reference
 - add `block settings` per block instance, see the additinal inputs on the block setting page or on the node edit page via [Block field](https://drupal.org/project/block_field) widget
 - use the ContextualFilter block settings option to override the contextual filters
@@ -52,11 +54,10 @@ Features supported by the plugin:
 
 ### Theme the Views Area handler 
   - the Views Area handler requires to implement the corresponding theme
-  - the ::renderArea() returns a render array suggesting the #theme [VIEWS_CURRENT_DISPLAY]_[AREA_ID]
+  - the ::renderArea() returns a basic render array displaying template suggestions
   
 ### Block Settings visibility  
   
-- All the block object can be accessed from the view by `view->views_block_overrides['block_instance']` see Drupal\views_block_overrides\Plugin\Block\ViewsBlockOverride::__construct()
-- 
+- The block object can be accessed from the view by `view->views_block_overrides['block_instance']` see Drupal\views_block_overrides\Plugin\Block\ViewsBlockOverride::__construct()
   
    
