@@ -49,6 +49,11 @@ interface BlockSettingsPluginInterface extends PluginInspectionInterface {
   public function submitOptionsForm(&$form, FormStateInterface $form_state);
 
   /**
+   * Get the options form settings.
+   */
+  public function getOptionsFormSettings();
+
+  /**
    * Returns plugin-specific settings for the block.
    *
    * @param array $settings
@@ -60,7 +65,7 @@ interface BlockSettingsPluginInterface extends PluginInspectionInterface {
    *
    * @see \Drupal\views\Plugin\Block\ViewsBlock::defaultConfiguration()
    */
-  public function blockSettings(array $settings);
+  public function blockSettings();
 
   /**
    * Adds the configuration form elements specific to this views block plugin.
@@ -149,10 +154,10 @@ interface BlockSettingsPluginInterface extends PluginInspectionInterface {
   public function getBlockInstance();
 
   /**
-   * Checks if the config plugin is allowed form the views settings.
-   *
-   * @return bool
-   *   TRUE if it's allowed
-   */
+ * Checks if the config plugin is allowed form the views settings.
+ *
+ * @return bool
+ *   TRUE if it's allowed
+ */
   public function isAllowed();
 }

@@ -24,9 +24,9 @@ class InlineEntity extends BlockSettingsPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function blockSettings(array $settings) {
-    $settings = parent::blockSettings($settings);
-    $settings[$this->pluginId]['inline_entity'] = NULL;
+  public function blockSettings() {
+    $settings = parent::blockSettings();
+    $settings['inline_entity'] = NULL;
 
     return $settings;
   }
@@ -36,13 +36,13 @@ class InlineEntity extends BlockSettingsPluginBase {
    */
   public function blockForm(ViewsBlock $block, array $form, FormStateInterface $form_state) {
     $subform = parent::blockForm($block, $form, $form_state);
-    $block_configuration = $block->getConfiguration();
+    $block_configuration = $this->getBlockSettings();
     $settings = $this->configuration['view_display']->getOption($this->pluginId);
     $entity = NULL;
     $entity_type = $settings['entity_reference']['target_type'];
     $bundle = $settings['entity_reference']['bundle_type'];
-    if (isset($block_configuration[$this->pluginId]['inline_entity']['target_entity'])) {
-      $target_entity_id = $block_configuration[$this->pluginId]['inline_entity']['target_entity'];
+    if (isset($block_configuration['inline_entity']['target_entity'])) {
+      $target_entity_id = $block_configuration['inline_entity']['target_entity'];
       if ($entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($target_entity_id)) {
         $entity = $bundle == $entity->bundle() ? $entity : NULL;
       }
@@ -50,7 +50,7 @@ class InlineEntity extends BlockSettingsPluginBase {
 
     $subform['inline_entity'] = [
       '#type' => 'details',
-      '#title' => $this->t('Inline Entity'),
+      '#title' => $this->getCustomLabel(),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
@@ -64,10 +64,7 @@ class InlineEntity extends BlockSettingsPluginBase {
       '#default_value' => $entity,
     ];
 
-    $form = [];
-    $form['override'][$this->pluginId] = $subform;
-
-    return $form;
+    return $subform;
   }
 
   /**
@@ -82,7 +79,8 @@ class InlineEntity extends BlockSettingsPluginBase {
    * Provide the default form for setting options.
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
-   $this->buildSelectionSettingsForm($form, $form_state);
+   $subform = $this->buildSelectionSettingsForm($form, $form_state);
+   return $subform;
   }
 
 

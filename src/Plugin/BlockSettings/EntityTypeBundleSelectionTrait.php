@@ -13,66 +13,61 @@ trait EntityTypeBundleSelectionTrait {
    * Provide the default form for setting options.
    */
   public function buildSelectionSettingsForm(&$form, FormStateInterface $form_state) {
-    $section = $form_state->get('section');
-    switch ($section) {
-      case $this->pluginId:
-        $settings = $this->configuration['view_display']->getOption($this->pluginId);
+    $settings = $this->getOptionsFormSettings();
 
-        if (($user_input = $form_state->getUserInput()) && isset($user_input[$this->pluginId])) {
-          $target_type = (!empty($user_input[$this->pluginId]['entity_reference']['target_type'])) ? $user_input[$this->pluginId]['entity_reference']['target_type'] : 'node';
-          $bundle_type = (!empty($user_input[$this->pluginId]['entity_reference']['bundle_type'])) ? $user_input[$this->pluginId]['entity_reference']['bundle_type'] : '';
+    if (($user_input = $form_state->getUserInput()) && isset($user_input[$this->pluginId])) {
+      $target_type = (!empty($user_input[$this->pluginId]['entity_reference']['target_type'])) ? $user_input[$this->pluginId]['entity_reference']['target_type'] : 'node';
+      $bundle_type = (!empty($user_input[$this->pluginId]['entity_reference']['bundle_type'])) ? $user_input[$this->pluginId]['entity_reference']['bundle_type'] : '';
 
-        }
-        else {
-          $target_type = (!empty($settings['entity_reference']['target_type'])) ? $settings['entity_reference']['target_type'] : NULL;
-          $bundle_type = (!empty($settings['entity_reference']['bundle_type'])) ? $settings['entity_reference']['bundle_type'] : NULL;
-        }
-
-        $target_type_options = $this->getEntityTypes();
-        $bundle_options = $this->getBundles($target_type);
-
-        // If the default selection handler has changed when need to update its
-        // value.
-        if (!isset($bundle_options[$bundle_type])) {
-          $bundle_type = NULL;
-          NestedArray::setValue($form_state->getUserInput(), [$this->pluginId, 'entity_reference', 'bundle_type'], $bundle_type);
-        }
-
-        $subform['entity_reference'] = [
-          '#type' => 'fieldset',
-          '#title' => t('Entity reference settings'),
-          '#weight' => -40,
-          '#prefix' => '<div id="entity-reference-selection-wrapper">',
-          '#suffix' => '</div>',
-        ];
-        // Target type.
-        $subform['entity_reference']['target_type'] = [
-          '#type' => 'select',
-          '#title' => $this->t('Type of item to reference'),
-          '#options' => $target_type_options,
-          '#required' => TRUE,
-          '#empty_option' => t('- Select a target type -'),
-          '#default_value' => $target_type,
-          '#ajax' => [
-            'callback' => [get_called_class(), 'entityTypeAjaxCallback'],
-            'wrapper' => 'entity-reference-selection-wrapper',
-            'progress' => ['type' => 'fullscreen'],
-          ],
-        ];
-
-        $subform['entity_reference']['bundle_type'] = [
-          '#type' => 'select',
-          '#title' => $this->t('Bundle'),
-          '#options' => $bundle_options,
-          '#required' => TRUE,
-          '#empty_option' => t('- Select a bundle type -'),
-          '#default_value' => $bundle_type,
-        ];
-
-        break;
     }
-    $form[$this->pluginId] = $subform;
+    else {
+      $target_type = (!empty($settings['entity_reference']['target_type'])) ? $settings['entity_reference']['target_type'] : NULL;
+      $bundle_type = (!empty($settings['entity_reference']['bundle_type'])) ? $settings['entity_reference']['bundle_type'] : NULL;
+    }
+
+    $target_type_options = $this->getEntityTypes();
+    $bundle_options = $this->getBundles($target_type);
+
+    // If the default selection handler has changed when need to update its
+    // value.
+    if (!isset($bundle_options[$bundle_type])) {
+      $bundle_type = NULL;
+      NestedArray::setValue($form_state->getUserInput(), [$this->pluginId, 'entity_reference', 'bundle_type'], $bundle_type);
+    }
+
+    $subform['entity_reference'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Entity reference settings'),
+      '#weight' => -40,
+      '#prefix' => '<div id="entity-reference-selection-wrapper">',
+      '#suffix' => '</div>',
+    ];
+    // Target type.
+    $subform['entity_reference']['target_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Type of item to reference'),
+      '#options' => $target_type_options,
+      '#required' => TRUE,
+      '#empty_option' => t('- Select a target type -'),
+      '#default_value' => $target_type,
+      '#ajax' => [
+        'callback' => [get_called_class(), 'entityTypeAjaxCallback'],
+        'wrapper' => 'entity-reference-selection-wrapper',
+        'progress' => ['type' => 'fullscreen'],
+      ],
+    ];
+
+    $subform['entity_reference']['bundle_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Bundle'),
+      '#options' => $bundle_options,
+      '#required' => TRUE,
+      '#empty_option' => t('- Select a bundle type -'),
+      '#default_value' => $bundle_type,
+    ];
+
     $form_state->setCached(FALSE);
+    return $subform;
   }
 
   /**
@@ -119,7 +114,7 @@ trait EntityTypeBundleSelectionTrait {
    */
   public function buildSelectionSettingsFormSubmit(ViewsBlock $block, $form, FormStateInterface $form_state) {
     $parents = array_merge($form['#array_parents'], [
-      'override',
+      $this->getViewDisplay()->getPluginId(),
       $this->getPluginId(),
       'inline_entity',
       'target_entity',
@@ -135,8 +130,8 @@ trait EntityTypeBundleSelectionTrait {
       }
       $entity_id = $entity->id();
     }
-    $values[$this->pluginId]['inline_entity']['target_entity'] = $entity_id;
-    return isset($values[$this->pluginId]) ? $values[$this->pluginId] : NULL;
+    $values['inline_entity']['target_entity'] = $entity_id;
+    return $values;
   }
 
   /**

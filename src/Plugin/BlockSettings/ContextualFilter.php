@@ -25,8 +25,8 @@ class ContextualFilter extends BlockSettingsPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function blockSettings(array $settings) {
-    $settings = parent::blockSettings($settings);
+  public function blockSettings() {
+    $settings = parent::blockSettings();
 
     // All contextual filters can be overridden.
     $contextual_filters = $this->getView()->display_handler->getHandlers('argument');
@@ -41,65 +41,41 @@ class ContextualFilter extends BlockSettingsPluginBase {
    * {@inheritdoc}
    */
   public function blockForm(ViewsBlock $block, array $form, FormStateInterface $form_state) {
-    $form = parent::blockForm($block, $form, $form_state);
+    $subform = parent::blockForm($block, $form, $form_state);
 
-    $allow_settings = array_filter($this->getViewDisplay()->getOption('allow'));
-    $block_configuration = $block->getConfiguration();
+    $block_configuration = $this->getBlockSettings();
+    $label = $this->t('Use contextual filter');
 
-    foreach ($allow_settings as $type => $enabled) {
-      if (empty($enabled)) {
-        continue;
-      }
+    $handlers = $this->getView()->display_handler->getHandlers('argument');
+    foreach ($handlers as $id => $handler) {
+      $subform['contextual_filter'][$id]['enabled'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('@type: @id', [
+          '@id' => $handler->definition['title'],
+          '@type' => $label,
+        ]),
+        '#default_value' => $block_configuration['contextual_filter'][$id]['enabled'],
+      ];
 
-      switch ($type) {
-        case "contextual_filter":
-          $handlers = $this->getView()->display_handler->getHandlers('argument');
-          $label = $this->t('Use contextual filter');
-          break;
-        default:
-          // Continue the loop.
-          continue 2;
-          break;
-      }
+      // Generate filter input.
+      $default_value = $block_configuration['contextual_filter'][$id]['value'] ?: NULL;
+      $element = &$subform['contextual_filter'][$id]['value'];
 
-      foreach ($handlers as $id => $handler) {
-        if ($type != 'contextual_filter' && !$handler->options['exposed']) {
-          continue;
-        }
+      $value = $this->getContextualPossibleValues($id, $handler);
+      $default_value = $default_value ?: $handler->options['exception']['value'];
 
-        $form['override'][$type][$id]['enabled'] = [
-          '#type' => 'checkbox',
-          '#title' => $this->t('@type: @id', [
-            '@id' => $handler->definition['title'],
-            '@type' => $label,
-          ]),
-          '#default_value' => $block_configuration[$type][$id]['enabled'],
-        ];
 
-        // Generate filter input.
-        $default_value = $block_configuration[$type][$id]['value'] ?: NULL;
-        $element = &$form['override'][$type][$id]['value'];
-        switch ($type) {
-          case 'contextual_filter':
-            $value = $this->getContextualPossibleValues($id, $handler);
-            $default_value = $default_value ?: $handler->options['exception']['value'];
-            break;
-          default:
-            $value = FALSE;
-            break;
-        }
-        $element = $this->getFormElement($id, $handler, $default_value, $value);
-        $element['#states'] = [
-          'visible' => [
-            [
-              ':input[name="settings[override][' . $type . '][' . $id . '][enabled]"]' => ['checked' => TRUE],
-            ],
+      $element = $this->getFormElement($id, $handler, $default_value, $value);
+      $element['#states'] = [
+        'visible' => [
+          [
+            ':input[name="settings[' . $id . '][enabled]"]' => ['checked' => TRUE],
           ],
-        ];
-      }
+        ],
+      ];
     }
 
-    return $form;
+    return $subform;
   }
 
   /**
@@ -248,13 +224,14 @@ class ContextualFilter extends BlockSettingsPluginBase {
     }
 
     foreach ($values as $id => $settings) {
-      $config[$id] = [
-        'enabled' => $settings['enabled'],
-        'value' => is_array($settings['value']) ? implode($this->getMultiValueSeparator(), $settings['value']) : $settings['value'],
-      ];
-      $form_state->unsetValue(['override', $this->pluginId, $id]);
+      foreach ($settings as $filter_id => $value) {
+        $config[$id][$filter_id] = [
+          'enabled' => $settings[$filter_id]['enabled'],
+          'value' => is_array($settings[$filter_id]['value']) ? implode($this->getMultiValueSeparator(), $settings[$filter_id]['value']) : $settings[$filter_id]['value'],
+        ];
+        $form_state->unsetValue([$this->pluginId, $id]);
+      }
     }
-
     return $config;
   }
 

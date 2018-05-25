@@ -24,9 +24,9 @@ class DynamicFormat extends BlockSettingsPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function blockSettings(array $settings) {
-    $settings = parent::blockSettings($settings);
-    $settings[$this->pluginId]['format'] = 'default';
+  public function blockSettings() {
+    $settings = parent::blockSettings();
+    $settings['format'] = 'default';
     return $settings;
   }
 
@@ -34,10 +34,10 @@ class DynamicFormat extends BlockSettingsPluginBase {
    * {@inheritdoc}
    */
   public function blockForm(ViewsBlock $block, array $form, FormStateInterface $form_state) {
-    $form = parent::blockForm($block, $form, $form_state);
+    $subform = parent::blockForm($block, $form, $form_state);
     $view = $this->getView();
     $display = $this->getViewDisplay();
-    $block_configuration = $block->getConfiguration();
+    $block_configuration = $this->getBlockSettings();
     // Get the row plugin.
     $type = 'row';
     $option = $display->getOption($type);
@@ -51,14 +51,14 @@ class DynamicFormat extends BlockSettingsPluginBase {
     $options = method_exists($row_plugin, 'getFormatOptions') ? $row_plugin->getFormatOptions() : ['default' => $this->t('Default')];
 
     // Build the setting form.
-    $form['override'][$this->pluginId]['format'] = [
-      '#title' => $this->t('Format'),
+    $subform['format'] = [
+      '#title' => $this->getCustomLabel(),
       '#type' => 'select',
       '#options' => $options,
-      '#default_value' => $block_configuration[$this->pluginId]['format'],
+      '#default_value' => $block_configuration['format'],
     ];
 
-    return $form;
+    return $subform;
   }
 
 }

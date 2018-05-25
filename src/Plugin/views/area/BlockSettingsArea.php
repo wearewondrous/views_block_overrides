@@ -71,12 +71,11 @@ class BlockSettingsArea extends AreaPluginBase {
     if (!$this->block_settings_plugin || !$this->block_settings_plugin->isAllowed()) {
       return [];
     }
-
     $context = [
       'area' => $this,
     ];
-
-    return $this->block_settings_plugin->renderArea($context);
+    $render = $this->block_settings_plugin->renderArea($context);
+    return $render;
   }
 
   /**

@@ -25,9 +25,9 @@ class EntityReference extends BlockSettingsPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function blockSettings(array $settings) {
-    $settings = parent::blockSettings($settings);
-    $settings[$this->pluginId]['reference'] = NULL;
+  public function blockSettings() {
+    $settings = parent::blockSettings();
+    $settings['reference'] = NULL;
 
     return $settings;
   }
@@ -36,18 +36,18 @@ class EntityReference extends BlockSettingsPluginBase {
    * {@inheritdoc}
    */
   public function blockForm(ViewsBlock $block, array $form, FormStateInterface $form_state) {
-    $form = parent::blockForm($block, $form, $form_state);
+    $subform = parent::blockForm($block, $form, $form_state);
 
-    $block_configuration = $block->getConfiguration();
+    $block_configuration = $this->getBlockSettings();
     $default_value = NULL;
-    if (isset($block_configuration[$this->pluginId]['reference'][0]['target_id'])) {
-      $default_value = Node::load($block_configuration[$this->pluginId]['reference'][0]['target_id']);
+    if (isset($block_configuration['reference'][0]['target_id'])) {
+      $default_value = Node::load($block_configuration['reference'][0]['target_id']);
     }
 
     $settings = $this->configuration['view_display']->getOption($this->pluginId);
 
-    $form['override'][$this->pluginId]['reference'] = array(
-      '#title' => $this->getTitle(),
+    $subform['reference'] = array(
+      '#title' => $this->getCustomLabel(),
       '#type' => 'entity_autocomplete',
       '#target_type' => $settings['target_type'],
       '#tags' => TRUE,
@@ -56,7 +56,7 @@ class EntityReference extends BlockSettingsPluginBase {
       '#selection_settings' => $settings['selection_settings']
     );
 
-    return $form;
+    //return $subform;
   }
 
   /**
@@ -79,17 +79,7 @@ class EntityReference extends BlockSettingsPluginBase {
    * Provide the default form for setting options.
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
-    parent::buildOptionsForm($form, $form_state);
-
-    $this->buildEntityReferenceSettingsForm($form, $form_state);
+    $subform = $this->buildEntityReferenceSettingsForm($form, $form_state);
+    return $subform;
   }
-
-  /**
-   * Perform any necessary changes to the form values prior to storage.
-   * There is no need for this function to actually store the data.
-   */
-  public function submitOptionsForm(&$form, FormStateInterface $form_state) {
-    parent::submitOptionsForm($form, $form_state);
-  }
-
 }

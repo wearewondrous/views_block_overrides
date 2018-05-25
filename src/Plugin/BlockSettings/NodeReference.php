@@ -24,9 +24,9 @@ class NodeReference extends BlockSettingsPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function blockSettings(array $settings) {
-    $settings = parent::blockSettings($settings);
-    $settings[$this->pluginId]['reference'] = NULL;
+  public function blockSettings() {
+    $settings = parent::blockSettings();
+    $settings['reference'] = NULL;
 
     return $settings;
   }
@@ -35,23 +35,23 @@ class NodeReference extends BlockSettingsPluginBase {
    * {@inheritdoc}
    */
   public function blockForm(ViewsBlock $block, array $form, FormStateInterface $form_state) {
-    $form = parent::blockForm($block, $form, $form_state);
+    $subform = parent::blockForm($block, $form, $form_state);
 
-    $block_configuration = $block->getConfiguration();
+    $block_configuration = $this->getBlockSettings();
     $default_value = NULL;
-    if (isset($block_configuration[$this->pluginId]['reference'][0]['target_id'])) {
-      $default_value = Node::load($block_configuration[$this->pluginId]['reference'][0]['target_id']);
+    if (isset($block_configuration['reference'][0]['target_id'])) {
+      $default_value = Node::load($block_configuration['reference'][0]['target_id']);
     }
 
-    $form['override'][$this->pluginId]['reference'] = array(
-      '#title' => $this->t('Node reference'),
+    $subform['reference'] = array(
+      '#title' => $this->getCustomLabel(),
       '#type' => 'entity_autocomplete',
       '#target_type' => 'node',
       '#tags' => TRUE,
       '#default_value' => $default_value,
     );
 
-    return $form;
+   return $subform;
   }
 
 }

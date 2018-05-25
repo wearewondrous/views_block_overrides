@@ -91,3 +91,38 @@ function views_block_overrides_views_data_alter(array &$data) {
     ];
   }
 }
+
+/**
+ * Implements hook_theme().
+ */
+function views_block_overrides_theme() {
+  return [
+    'views_block_overrides_area' => [
+      'variables' => [
+        'settings' => [],
+        'context' => []
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements HOOK_theme_suggestions_HOOK_alter().
+ */
+function views_block_overrides_theme_suggestions_views_block_overrides_area_alter(array &$suggestions, array $variables, $hook) {
+  $block_settings_plugin_id = $variables['context']['block_settings_plugin']->getPluginId();
+  $view = $variables['context']['view'];
+  $current_display = $view->current_display;
+  $area_id = $variables['context']['area']->options['id'];
+
+  $new_suggestions = [
+    [$hook, $block_settings_plugin_id],
+    [$hook, $view->id()],
+    [$hook, $current_display],
+    [$hook, $area_id],
+  ];
+
+  foreach ($new_suggestions as $suggestion) {
+    $suggestions[] = implode('__', $suggestion);
+  }
+}

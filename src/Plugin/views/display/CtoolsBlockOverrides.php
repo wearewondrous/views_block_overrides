@@ -7,6 +7,7 @@ use Drupal\views\Plugin\Block\ViewsBlock;
 use Drupal\ctools_views\Plugin\Display\Block as CtoolBlock;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Component\Utility\SortArray;
 
 /**
  * A block plugin that allows exposed filters to be configured.
@@ -27,6 +28,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class CtoolsBlockOverrides extends CtoolBlock {
+
 
   /**
    * The entity manager.
@@ -83,11 +85,37 @@ class CtoolsBlockOverrides extends CtoolBlock {
    *
    * @return object
    */
-  public function getBlockSettingsInstance($plugin_id, $settings = []) {
+  public function getBlockSettingsInstance($plugin_id) {
+    $plugins = $this->getBlockSettingsInstances();
+    return $plugins[$plugin_id];
+  }
+
+  /**
+   * Get's the list of existing views block settings.
+   *
+   * @param array $settings
+   *   The plugin settings.
+   *
+   * @return array
+   *   The list of block settings.
+   */
+  public function getBlockSettingsInstances($settings = []) {
+    $plugins = drupal_static(__FUNCTION__);
+
+    if ($plugins) {
+      return $plugins;
+    }
+
     $plugin_settings = $settings + [
-      'view_display' => $this,
-    ];
-    return $this->configurationPluginManager->createInstance($plugin_id, $plugin_settings);
+        'view_display' => $this,
+      ];
+
+    $plugin_definitions = $this->getBlockSettingsDefinitions();
+    foreach ($plugin_definitions as $plugin_id => $definition) {
+      $plugins[$plugin_id] = $this->configurationPluginManager->createInstance($plugin_id, $plugin_settings);
+    }
+
+    return $plugins;
   }
 
   /**
@@ -95,12 +123,20 @@ class CtoolsBlockOverrides extends CtoolBlock {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-
-    $plugin_definitions = $this->getBlockSettingsDefinitions();
-    foreach ($plugin_definitions as $id => $definition) {
-      $plugin = $this->getBlockSettingsInstance($id);
+    $settings = [];
+    $weight = 0;
+    foreach ($this->getBlockSettingsInstances() as $id => $plugin) {
       $options = array_merge_recursive($options, $plugin->defineOptions());
+
+      // Prepare the settings.
+      $settings[$id] = [
+        'custom_label' => $plugin->getTitle(),
+        'enabled' => 0,
+        'weight' => $weight++,
+      ];
     }
+
+    $options[$this->getPluginId()] = ['default' => $settings];
 
     return $options;
   }
@@ -113,13 +149,17 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function optionsSummary(&$categories, &$options) {
     parent::optionsSummary($categories, $options);
 
-    $plugin_definitions = $this->getBlockSettingsDefinitions();
-    foreach ($plugin_definitions as $id => $definition) {
+    $options[$this->getPluginId()] = [
+      'category' => 'block',
+      'title' => $this->pluginTitle(),
+      'value' => $this->t('Settings'),
+    ];
+
+    foreach ($this->getBlockSettingsInstances() as $id => $plugin) {
       if (!$this->isAllowed($id)) {
         continue;
       }
       /** @var \Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface $plugin */
-      $plugin = $this->getBlockSettingsInstance($id);
       $plugin->optionsSummary($categories, $options);
     }
   }
@@ -130,12 +170,14 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $plugin_definitions = $this->getBlockSettingsDefinitions();
-    foreach ($plugin_definitions as $id => $definition) {
-      $plugin = $this->getBlockSettingsInstance($id);
-      $plugin->buildOptionsForm($form, $form_state);
-      if (isset($form[$plugin->pluginId])) {
-        $form[$plugin->pluginId]['#tree'] = TRUE;
+    // Builds the main settings form.
+    $this->buildMainOptionsForm($form, $form_state);
+    $section = $form_state->get('section');
+    foreach ($this->getBlockSettingsInstances() as $id => $plugin) {
+      switch ($section) {
+        case $id:
+          $form[$plugin->pluginId] = $plugin->buildOptionsForm($form, $form_state);
+          $form[$plugin->pluginId]['#tree'] = TRUE;
       }
     }
   }
@@ -147,10 +189,102 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function submitOptionsForm(&$form, FormStateInterface $form_state) {
     parent::submitOptionsForm($form, $form_state);
 
-    $plugin_definitions = $this->getBlockSettingsDefinitions();
-    foreach ($plugin_definitions as $id => $definition) {
-      $plugin = $this->getBlockSettingsInstance($id);
-      $plugin->submitOptionsForm($form, $form_state);
+    $section = $form_state->get('section');
+    switch ($section) {
+      case $this->getPluginId():
+        // Submit for the main options form.
+        $this->setOption($section, $form_state->getValue($section));
+        break;
+    }
+
+    foreach ($this->getBlockSettingsInstances() as $id => $plugin) {
+      if (!$this->isAllowed($id)) {
+        continue;
+      }
+      $section = $form_state->get('section');
+      switch ($section) {
+        case $id:
+          // Call the current section plugin submit.
+          $plugin->submitOptionsForm($form, $form_state);
+          break;
+      }
+    }
+  }
+
+  /**
+   * Build the main settings form.
+   */
+  public function buildMainOptionsForm(&$form, FormStateInterface $form_state) {
+    $section = $form_state->get('section');
+    switch ($section) {
+      case $this->getPluginId():
+
+        $settings = $this->getOption($this->getPluginId());
+
+        $form[$this->getPluginId()][$this->getPluginId()] = [
+          '#type' => 'table',
+          '#header' => [
+            $this->t('Block settings'),
+            $this->t('Weight'),
+            $this->t('Enabled'),
+            $this->t('Custom Label'),
+          ],
+          '#empty' => $this->t('No displays available.'),
+          '#tabledrag' => [
+            [
+              'action' => 'order',
+              'relationship' => 'sibling',
+              'group' => 'table-sort-weight',
+            ]
+          ],
+        ];
+
+        uasort($settings, function ($a, $b) {
+          return SortArray::sortByWeightElement($a, $b);
+        });
+
+        $table = &$form[$this->getPluginId()][$this->getPluginId()];
+        foreach ($settings as $id => $value) {
+          $plugin = $this->getBlockSettingsInstance($id);
+          // Add tableDrag support:
+          $table[$id]['#attributes']['class'][] = 'draggable';
+          $table[$id]['#weight'] = $value['weight'];
+
+
+          $table[$id]['label'] = [
+            '#type' => 'label',
+            '#title' => $plugin->getTitle(),
+          ];
+
+          // TableDrag: Weight column element.
+          $table[$id]['weight'] = [
+            '#type' => 'weight',
+            '#title' => $this
+              ->t('Weight for @title', [
+                '@title' => $plugin->getTitle(),
+              ]),
+            '#title_display' => 'invisible',
+            '#default_value' => $value['weight'],
+            // Classify the weight element for #tabledrag.
+            '#attributes' => [
+              'class' => [
+                'table-sort-weight',
+              ],
+            ],
+          ];
+
+          $table[$id]['enabled'] = [
+            '#type' => 'checkbox',
+            '#default_value' => $value['enabled'],
+          ];
+
+          $table[$id]['custom_label'] = [
+            '#type' => 'textfield',
+            '#default_value' => $value['custom_label']
+          ];
+        }
+
+        break;
     }
   }
 
@@ -169,14 +303,13 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function blockSettings(array $settings) {
     $settings = parent::blockSettings($settings);
 
-    $plugin_definitions = $this->getBlockSettingsDefinitions();
-    foreach ($plugin_definitions as $id => $definition) {
-      $plugin = $this->getBlockSettingsInstance($id);
-      $settings = array_merge_recursive($settings, $plugin->blockSettings($settings));
+    foreach ($this->getBlockSettingsInstances() as $id => $plugin) {
+      $settings[$this->getPluginId()][$id] = $plugin->blockSettings();
     }
 
     return $settings;
   }
+
 
   /**
    * Adds the configuration form elements specific to this views block plugin.
@@ -196,13 +329,19 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function blockForm(ViewsBlock $block, array &$form, FormStateInterface $form_state) {
     $form = parent::blockForm($block, $form, $form_state);
 
-    $plugin_definitions = $this->getBlockSettingsDefinitions();
-    foreach ($plugin_definitions as $id => $definition) {
+    $settings = $this->getOption($this->getPluginId());
+
+    $form[$this->getPluginId()] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Block overrides'),
+    ];
+
+    foreach ($this->getBlockSettingsInstances() as $id => $plugin) {
       if (!$this->isAllowed($id)) {
         continue;
       }
-      $plugin = $this->getBlockSettingsInstance($id);
-      $form = array_merge_recursive($form, $plugin->blockForm($block, $form, $form_state));
+      $form[$this->getPluginId()][$id] = $plugin->blockForm($block, $form, $form_state);
+      $form[$this->getPluginId()][$id]['#weight'] = $settings[$id]['weight'];
     }
 
     return $form;
@@ -223,14 +362,12 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function blockSubmit(ViewsBlock $block, $form, FormStateInterface $form_state) {
     parent::blockSubmit($block, $form, $form_state);
 
-    $plugin_definitions = $this->getBlockSettingsDefinitions();
     $config = $block->getConfiguration();
-    foreach ($plugin_definitions as $id => $definition) {
+    foreach ($this->getBlockSettingsInstances() as $id => $plugin) {
       if (!$this->isAllowed($id)) {
         continue;
       }
-      $plugin = $this->getBlockSettingsInstance($id);
-      $config[$id] = $plugin->blockSubmit($block, $form, $form_state);
+      $config[$this->getPluginId()][$id] = $plugin->blockSubmit($block, $form, $form_state);
     }
     $block->setConfiguration($config);
   }
@@ -244,12 +381,10 @@ class CtoolsBlockOverrides extends CtoolBlock {
   public function preBlockBuild(ViewsBlock $block) {
     parent::preBlockBuild($block);
 
-    $plugin_definitions = $this->getBlockSettingsDefinitions();
-    foreach ($plugin_definitions as $id => $definition) {
+    foreach ($this->getBlockSettingsInstances() as $id => $plugin) {
       if (!$this->isAllowed($id)) {
         continue;
       }
-      $plugin = $this->getBlockSettingsInstance($id);
       $plugin->preBlockBuild($block);
     }
   }
@@ -261,8 +396,19 @@ class CtoolsBlockOverrides extends CtoolBlock {
    *   TRUE if it's allowed
    */
   public function isAllowed($plugin_id) {
-    $options = array_filter($this->getOption('allow'));
-    return isset($options[$plugin_id]);
+    $options = array_filter($this->getOption($this->getPluginId()));
+    return $options[$plugin_id]['enabled'];
   }
 
+
+  /**
+   * Checks if the config plugin is allowed form the views settings.
+   *
+   * @return bool
+   *   TRUE if it's allowed
+   */
+  public function getSettings($plugin_id) {
+    $options = array_filter($this->getOption($this->getPluginId()));
+    return $options[$plugin_id];
+  }
 }

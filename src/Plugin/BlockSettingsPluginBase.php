@@ -62,50 +62,40 @@ abstract class BlockSettingsPluginBase extends PluginBase implements BlockSettin
    * {@inheritdoc}
    */
   public function defineOptions() {
-    $options['allow']['contains'][$this->pluginId] = ['default' => 0];
-    return $options;
+    return [];
   }
 
   /**
    * {@inheritdoc}
    */
   public function optionsSummary(&$categories, &$options) {
-    $view_display = $this->configuration['view_display'];
-
-    $filtered_allow = array_filter($view_display->getOption('allow'));
-    if (isset($filtered_allow[$this->pluginId])) {
-      $options['allow']['value'] = empty($options['allow']['value'])
-      ? $this->getTitle()
-      : implode(', ', [
-          $options['allow']['value'],
-          $this->getTitle()
-        ]);
-    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
-    $form['allow']['#options'][$this->pluginId] = $this->getTitle();
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitOptionsForm(&$form, FormStateInterface $form_state) {
-    $section = $form_state->get('section');
-    switch ($section) {
-      case $this->pluginId:
-        $this->configuration['view_display']->setOption($section, $form_state->getValue($section));
-        break;
-    }
+    $value = $form_state->getValue($this->pluginId);
+    $this->configuration['view_display']->setOption($this->pluginId, $value);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function blockSettings(array $settings) {
+  public function getOptionsFormSettings() {
+    return $this->configuration['view_display']->getOption($this->pluginId);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function blockSettings() {
     return [];
   }
 
@@ -120,8 +110,10 @@ abstract class BlockSettingsPluginBase extends PluginBase implements BlockSettin
    * {@inheritdoc}
    */
   public function blockSubmit(ViewsBlock $block, $form, FormStateInterface $form_state) {
-    $values = $form_state->getValue(['override']);
-    return isset($values[$this->pluginId]) ? $values[$this->pluginId] : NULL;
+    $display = $this->getViewDisplay();
+
+    $values = $form_state->getValue([$display->getPluginId(), $this->pluginId]);
+    return isset($values) ? $values : NULL;
   }
 
   /**
@@ -151,14 +143,14 @@ abstract class BlockSettingsPluginBase extends PluginBase implements BlockSettin
       return [];
     }
 
-    $view = $this->configuration['view_display']->view;
-    $area_id = $context['area']->options['id'];
+    $context['block_settings_plugin'] = $this;
+    $context['view'] = $this->configuration['view_display']->view;
     $block_settings = $this->getBlockSettings();
-    $theme = [$view->current_display, $area_id];
 
     return [
-      '#theme' => implode('_', $theme),
-      '#block_settings' => $block_settings,
+      '#theme' => 'views_block_overrides_area',
+      '#settings' => $block_settings,
+      '#context' => $context,
     ];
   }
 
@@ -170,7 +162,8 @@ abstract class BlockSettingsPluginBase extends PluginBase implements BlockSettin
       return NULL;
     }
     $block_settings = $block_instance->getConfiguration();
-    return isset($block_settings[$this->pluginId]) ? $block_settings[$this->pluginId] : [];
+    $display = $this->getViewDisplay();
+    return isset($block_settings[$display->getPluginId()][$this->pluginId]) ? $block_settings[$display->getPluginId()][$this->pluginId] : [];
   }
 
   /**
@@ -185,7 +178,7 @@ abstract class BlockSettingsPluginBase extends PluginBase implements BlockSettin
    * {@inheritdoc}
    */
   public function getDisplayOptions() {
-    $display = $this->configuration['view_display'];
+    $display = $this->getViewDisplay();
     return $display->getOption($this->pluginId);
   }
 
@@ -194,5 +187,17 @@ abstract class BlockSettingsPluginBase extends PluginBase implements BlockSettin
    */
   public function isAllowed() {
     return $this->configuration['view_display']->isAllowed($this->pluginId);
+  }
+
+  /**
+   * Get's the custom label from the view display.
+   *
+   * @return string
+   *   The label.
+   */
+  public function getCustomLabel() {
+    $display_settigns = $this->getViewDisplay()->getSettings($this->pluginId);
+    $custom_label = trim($display_settigns['custom_label']);
+    return $custom_label ? $custom_label : $this->getTitle();
   }
 }

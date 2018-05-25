@@ -24,9 +24,9 @@ class Headline extends BlockSettingsPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function blockSettings(array $settings) {
-    $settings = parent::blockSettings($settings);
-    $settings[$this->pluginId]['headline'] = NULL;
+  public function blockSettings() {
+    $settings = parent::blockSettings();
+    $settings['headline'] = NULL;
 
     return $settings;
   }
@@ -35,15 +35,14 @@ class Headline extends BlockSettingsPluginBase {
    * {@inheritdoc}
    */
   public function blockForm(ViewsBlock $block, array $form, FormStateInterface $form_state) {
-    $form = parent::blockForm($block, $form, $form_state);
+    $subform = parent::blockForm($block, $form, $form_state);
 
-    $block_configuration = $block->getConfiguration();
+    $block_configuration = $this->getBlockSettings();
     $display_options = $this->getDisplayOptions();
-    $configuration = $block_configuration[$this->pluginId];
 
     $subform['headline'] = [
       '#type' => 'details',
-      '#title' => $this->t('Block headline'),
+      '#title' => $this->getCustomLabel(),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
@@ -51,24 +50,24 @@ class Headline extends BlockSettingsPluginBase {
     $subform['headline']['use_global'] = array(
       '#title' => $this->t('Use global Headline settings'),
       '#type' => 'checkbox',
-      '#default_value' => $configuration['headline']['use_global'],
+      '#default_value' => $block_configuration['headline']['use_global'],
     );
 
     $subform['headline']['title'] = array(
       '#title' => $this->t('Title'),
       '#type' => 'text_format',
-      '#default_value' => isset($configuration['headline']['title']['value']) ? $configuration['headline']['title']['value'] : $display_options['title']['value'],
-      '#format' => isset($configuration['headline']['title']['format']) ? $configuration['headline']['title']['format'] : $display_options['title']['format'],
+      '#default_value' => isset($block_configuration['headline']['title']['value']) ? $block_configuration['headline']['title']['value'] : $display_options['title']['value'],
+      '#format' => isset($block_configuration['headline']['title']['format']) ? $block_configuration['headline']['title']['format'] : $display_options['title']['format'],
     );
 
     $subform['headline']['description'] = array(
       '#title' => $this->t('Description'),
       '#type' => 'text_format',
-      '#default_value' => isset($configuration['headline']['description']['value']) ? $configuration['headline']['description']['value'] : $display_options['description']['value'],
-      '#format' => isset($configuration['headline']['description']['format']) ? $configuration['headline']['description']['format'] : $display_options['description']['format'],
+      '#default_value' => isset($block_configuration['headline']['description']['value']) ? $block_configuration['headline']['description']['value'] : $display_options['description']['value'],
+      '#format' => isset($block_configuration['headline']['description']['format']) ? $block_configuration['headline']['description']['format'] : $display_options['description']['format'],
     );
 
-    $nid = isset($configuration['headline']['link']) ? $configuration['headline']['link'] : $display_options['link'];
+    $nid = isset($block_configuration['headline']['link']) ? $block_configuration['headline']['link'] : $display_options['link'];
 
     $subform['headline']['link'] = array(
       '#type' => 'entity_autocomplete',
@@ -77,9 +76,7 @@ class Headline extends BlockSettingsPluginBase {
       '#default_value' => $nid ? Node::load($nid) : NULL,
     );
 
-    $form['override'][$this->pluginId] = $subform;
-
-    return $form;
+    return $subform;
   }
 
   /**
@@ -113,52 +110,35 @@ class Headline extends BlockSettingsPluginBase {
       'title' => $this->getTitle(),
       'value' => $this->t('Settings'),
     ];
-
   }
 
   /**
    * Provide the default form for setting options.
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
-    parent::buildOptionsForm($form, $form_state);
-    $settings = $this->configuration['view_display']->getOption($this->pluginId);
-    $section = $form_state->get('section');
+    $subform = parent::buildOptionsForm($form, $form_state);
+    $settings = $this->getOptionsFormSettings();
+    $subform['title'] = [
+      '#title' => $this->t('Title'),
+      '#type' => 'text_format',
+      '#default_value' => $settings['title']['value'],
+      '#format' => $settings['title']['format'],
+    ];
 
-    switch ($section) {
-      case $this->pluginId:
-        $subform['title'] = [
-          '#title' => $this->t('Title'),
-          '#type' => 'text_format',
-          '#default_value' => $settings['title']['value'],
-          '#format' => $settings['title']['format'],
-        ];
+    $subform['description'] = [
+      '#title' => $this->t('Description'),
+      '#type' => 'text_format',
+      '#default_value' => $settings['description']['value'],
+      '#format' => $settings['description']['format'],
+    ];
 
-        $subform['description'] = [
-          '#title' => $this->t('Description'),
-          '#type' => 'text_format',
-          '#default_value' => $settings['description']['value'],
-          '#format' => $settings['description']['format'],
-        ];
+    $subform['link'] = [
+      '#type' => 'entity_autocomplete',
+      '#target_type' => 'node',
+      '#title' => $this->t('Link'),
+      '#default_value' => isset($settings['link']) ? Node::load($settings['link']) : NULL,
+    ];
 
-        $subform['link'] = [
-          '#type' => 'entity_autocomplete',
-          '#target_type' => 'node',
-          '#title' => $this->t('Link'),
-          '#default_value' => isset($settings['link']) ? Node::load($settings['link']) : NULL,
-        ];
-
-        break;
-    }
-
-    $form[$this->pluginId] = $subform;
+    return $subform;
   }
-
-  /**
-   * Perform any necessary changes to the form values prior to storage.
-   * There is no need for this function to actually store the data.
-   */
-  public function submitOptionsForm(&$form, FormStateInterface $form_state) {
-    parent::submitOptionsForm($form, $form_state);
-  }
-
 }
