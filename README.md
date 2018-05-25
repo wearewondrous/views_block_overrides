@@ -28,15 +28,14 @@ FYI, most of the features listed were tested with paragraph + block_field only (
 - use the ContextualFilter block settings option to override the contextual filters
   - by default you'll see a text field for entering the custom values
   - by adding `validation criteria` to the conextual filter you will see a select list using entity selection (based on the Validation option selected)
- 
-
+  
 ## Technical details
 
 ### Plugin type @BlockSettings
 
 Features supported by the plugin:
 
-- Auto display the new plugin implementations under the Views Allow settings
+- Auto displays the new plugin implementations under the Views Allow settings
 
 - Adds custom settings form on block instance, see  
   - `Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface::blockSettings()`
@@ -60,4 +59,23 @@ Features supported by the plugin:
   
 - The block object can be accessed from the view by `view->views_block_overrides['block_instance']` see Drupal\views_block_overrides\Plugin\Block\ViewsBlockOverride::__construct()
   
-   
+## Plugin types (experimental)
+
+#### Plugin type Contextual Filter 
+  - Gemerates a text input or select for all the contextual filters.
+  - The select input will appear if validation is applied on the contextual filter (e.g. Content > Page)
+  
+#### Plugin type Dynamic Format
+  - Lets override the Views Format View mode.
+  - Works together with the `Content (with dynamic view mode)` view format, choosed on Views > Format > Show.
+
+#### Plugin type Inline entity
+  - Lets to attach and inline edit entities on the block settings form
+  - Allowes to setup the entity type / bundle on the View > Block Settings > Inline Entity
+  - Renders the attached entity using the Views Area handler `Views block overrides - Inline entity`, see the area settings to choose the entity view mode.
+  
+#### Plugin type Headline
+  - Generates Title, subtitle and link inputs for the block instance settings and as global settings on the views as well.
+
+#### Plugin type Entity reference
+  - Generates an entity reference input.
