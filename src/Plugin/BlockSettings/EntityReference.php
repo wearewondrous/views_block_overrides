@@ -49,14 +49,14 @@ class EntityReference extends BlockSettingsPluginBase {
     $subform['reference'] = array(
       '#title' => $this->getCustomLabel(),
       '#type' => 'entity_autocomplete',
-      '#target_type' => $settings['target_type'],
+      '#target_type' => $settings['entity_reference']['target_type'],
       '#tags' => TRUE,
       '#default_value' => $default_value,
-      '#selection_handler' => $settings['selection_handler'],
-      '#selection_settings' => $settings['selection_settings']
+      '#selection_handler' => $settings['entity_reference']['selection_handler'],
+      '#selection_settings' => $settings['entity_reference']['selection_settings']
     );
 
-    //return $subform;
+    return $subform;
   }
 
   /**
