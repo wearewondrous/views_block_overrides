@@ -250,7 +250,6 @@ class CtoolsBlockOverrides extends CtoolBlock {
           $table[$id]['#attributes']['class'][] = 'draggable';
           $table[$id]['#weight'] = $value['weight'];
 
-
           $table[$id]['label'] = [
             '#type' => 'label',
             '#title' => $plugin->getTitle(),

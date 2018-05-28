@@ -18,7 +18,6 @@ trait EntityTypeBundleSelectionTrait {
     if (($user_input = $form_state->getUserInput()) && isset($user_input[$this->pluginId])) {
       $target_type = (!empty($user_input[$this->pluginId]['entity_reference']['target_type'])) ? $user_input[$this->pluginId]['entity_reference']['target_type'] : 'node';
       $bundle_type = (!empty($user_input[$this->pluginId]['entity_reference']['bundle_type'])) ? $user_input[$this->pluginId]['entity_reference']['bundle_type'] : '';
-
     }
     else {
       $target_type = (!empty($settings['entity_reference']['target_type'])) ? $settings['entity_reference']['target_type'] : NULL;
@@ -28,8 +27,7 @@ trait EntityTypeBundleSelectionTrait {
     $target_type_options = $this->getEntityTypes();
     $bundle_options = $this->getBundles($target_type);
 
-    // If the default selection handler has changed when need to update its
-    // value.
+    // Reset the bundle type if the entity type has changed.
     if (!isset($bundle_options[$bundle_type])) {
       $bundle_type = NULL;
       NestedArray::setValue($form_state->getUserInput(), [$this->pluginId, 'entity_reference', 'bundle_type'], $bundle_type);
@@ -107,31 +105,6 @@ trait EntityTypeBundleSelectionTrait {
       });
 
     return $options;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildSelectionSettingsFormSubmit(ViewsBlock $block, $form, FormStateInterface $form_state) {
-    $parents = array_merge($form['#array_parents'], [
-      $this->getViewDisplay()->getPluginId(),
-      $this->getPluginId(),
-      'inline_entity',
-      'target_entity',
-    ]);
-    $element = NestedArray::getValue($form_state->getCompleteForm(), $parents);
-    $entity_id = NULL;
-    $triggering_element = $form_state->getTriggeringElement();
-    $save = $triggering_element['#type'] == 'submit' && !isset($triggering_element['#ajax']) && $element['#entity']->isNew();
-    if (isset($element['#entity'])) {
-      $entity = $element['#entity'];
-      if ($save) {
-        $status = $entity->save();
-      }
-      $entity_id = $entity->id();
-    }
-    $values['inline_entity']['target_entity'] = $entity_id;
-    return $values;
   }
 
   /**

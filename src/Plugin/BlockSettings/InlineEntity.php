@@ -71,7 +71,24 @@ class InlineEntity extends BlockSettingsPluginBase {
    * {@inheritdoc}
    */
   public function blockSubmit(ViewsBlock $block, $form, FormStateInterface $form_state) {
-    $values = $this->buildSelectionSettingsFormSubmit($block, $form, $form_state);
+    $parents = array_merge($form['#array_parents'], [
+      $this->getViewDisplay()->getPluginId(),
+      $this->getPluginId(),
+      'inline_entity',
+      'target_entity',
+    ]);
+    $element = NestedArray::getValue($form_state->getCompleteForm(), $parents);
+    $entity_id = NULL;
+    $triggering_element = $form_state->getTriggeringElement();
+    $save = $triggering_element['#type'] == 'submit' && !isset($triggering_element['#ajax']) && $element['#entity']->isNew();
+    if (isset($element['#entity'])) {
+      $entity = $element['#entity'];
+      if ($save) {
+        $status = $entity->save();
+      }
+      $entity_id = $entity->id();
+    }
+    $values['inline_entity']['target_entity'] = $entity_id;
     return $values;
   }
 
@@ -82,7 +99,6 @@ class InlineEntity extends BlockSettingsPluginBase {
    $subform = $this->buildSelectionSettingsForm($form, $form_state);
    return $subform;
   }
-
 
   /**
    * Entity reference Ajax callback.
@@ -100,7 +116,6 @@ class InlineEntity extends BlockSettingsPluginBase {
     $element = NestedArray::getValue($form, array_slice($button['#array_parents'], 0, -1));
     return $element;
   }
-
 
   /**
    * Provide the summary for page options in the views UI.
