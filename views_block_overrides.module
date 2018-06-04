@@ -77,7 +77,7 @@ function views_block_overrides_views_data_alter(array &$data) {
   $block_settings_manager = \Drupal::service('plugin.manager.block_settings');
   /** @var  Drupal\views_block_overrides\Plugin\BlockSettingsPluginInterface $definition */
   foreach ($block_settings_manager->getDefinitions() as $definition_id => $definition) {
-    if ($definition['area'] != TRUE) {
+    if (!isset($definition['area']) || $definition['area'] != TRUE) {
       continue;
     }
     $key = 'views_block_overrides_' . $definition_id;
