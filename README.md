@@ -11,7 +11,7 @@ Provides a new views block display (Block overrides) on top of ctools_block to a
 
 Create a new block display type *Block overrides* or edit your existing view YAML configuration and change the display type to  `display_plugin: views_block_overrides`
 
-- Enable ctool_blocks [Chaos tool set](https://drupal.org/project/ctools).
+- Enable ctool_block [Chaos tool set](https://drupal.org/project/ctools).
 - Go to views and add a new display, type of "Block overrides" to your view.
 - Check the Block overrides settings for enabling or disabling, reordering the custom block settings.
 - Additional settings can be added by implementing new @BlockSettings plugins
@@ -62,7 +62,7 @@ Features supported by the plugin:
 ## Plugin types (experimental)
 
 #### Plugin type Contextual Filter 
-  - Gemerates a text input or select for all the contextual filters.
+  - Generates a text input or select for all the contextual filters.
   - The select input will appear if validation is applied on the contextual filter (e.g. Content > Page)
   
 #### Plugin type Dynamic Format
