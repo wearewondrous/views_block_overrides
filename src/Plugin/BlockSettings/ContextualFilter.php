@@ -252,8 +252,10 @@ class ContextualFilter extends BlockSettingsPluginBase {
    */
   public function setContextualFilters($block) {
     $config = $block->getConfiguration();
-    if (!empty($config['contextual_filter'])) {
-      foreach ($config['contextual_filter'] as $id => $values) {
+
+    if (!empty($config['views_block_overrides']['contextual_filter']['contextual_filter'])) {
+      foreach ($config['views_block_overrides']['contextual_filter']['contextual_filter'] as $id => $values) {
+
         if ($values['enabled']) {
           $contextual_filter_value = $values['value'];
           $contextual_filter_type = $this->getContextualFilterValidationType($id);
