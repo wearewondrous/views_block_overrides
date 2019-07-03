@@ -8,6 +8,8 @@ use Drupal\ctools_views\Plugin\Display\Block as CtoolBlock;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Component\Utility\SortArray;
+use Drupal\Core\Block\BlockManagerInterface;
+use Drupal\views_block_overrides\Plugin\BlockSettingsPluginManager;
 
 /**
  * A block plugin that allows exposed filters to be configured.
@@ -47,8 +49,8 @@ class CtoolsBlockOverrides extends CtoolBlock {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityManagerInterface $entity_manager, $configuration_plugin_manager) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_manager);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityManagerInterface $entity_manager, BlockManagerInterface $block_manager, BlockSettingsPluginManager $configuration_plugin_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_manager, $block_manager);
 
     $this->configurationPluginManager = $configuration_plugin_manager;
   }
@@ -62,6 +64,7 @@ class CtoolsBlockOverrides extends CtoolBlock {
       $plugin_id,
       $plugin_definition,
       $container->get('entity.manager'),
+      $container->get('plugin.manager.block'),
       $container->get('plugin.manager.block_settings')
     );
   }
