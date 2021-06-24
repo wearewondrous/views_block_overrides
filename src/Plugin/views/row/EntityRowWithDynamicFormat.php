@@ -48,7 +48,6 @@ class EntityRowWithDynamicFormat extends EntityRow {
    * @return array
    */
   public function getFormatOptions() {
-    return \Drupal::entityManager()->getViewModeOptions($this->entityTypeId);
+    return \Drupal::entityTypeManager()->getViewModeOptions($this->entityTypeId);
   }
-
 }

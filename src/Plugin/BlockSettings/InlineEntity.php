@@ -96,8 +96,8 @@ class InlineEntity extends BlockSettingsPluginBase {
    * Provide the default form for setting options.
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
-   $subform = $this->buildSelectionSettingsForm($form, $form_state);
-   return $subform;
+    $subform = $this->buildSelectionSettingsForm($form, $form_state);
+    return $subform;
   }
 
   /**
@@ -148,7 +148,7 @@ class InlineEntity extends BlockSettingsPluginBase {
     $display_options = $this->getDisplayOptions();
     $entity_type = $display_options['entity_reference']['target_type'];
 
-    $options = \Drupal::entityManager()->getViewModeOptions($entity_type);
+    $options = \Drupal::entityTypeManager()->getViewModeOptions($entity_type);
 
     // Build the setting form.
     $form['view_mode'] = [
@@ -185,5 +185,4 @@ class InlineEntity extends BlockSettingsPluginBase {
 
     return $render;
   }
-
 }

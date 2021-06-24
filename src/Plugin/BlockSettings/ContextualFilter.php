@@ -135,7 +135,7 @@ class ContextualFilter extends BlockSettingsPluginBase {
       }
       $terms = Term::loadMultiple($query->execute());
       foreach ($terms as $term) {
-        $values[$term->id()] = \Drupal::entityManager()
+        $values[$term->id()] = \Drupal::entityTypeManager()
           ->getTranslationFromContext($term)
           ->label();
       }
@@ -159,7 +159,7 @@ class ContextualFilter extends BlockSettingsPluginBase {
           $options['exception']['value'] => $options['exception']['title'],
         ];
         foreach ($validate_bundles as $bundle) {
-          $terms = \Drupal::entityManager()
+          $terms = \Drupal::entityTypeManager()
             ->getStorage('taxonomy_term')
             ->loadTree($bundle);
           foreach ($terms as $term) {
@@ -167,7 +167,7 @@ class ContextualFilter extends BlockSettingsPluginBase {
           }
         }
         break;
-      // TODO more generic way to work with other entity types as well.
+        // TODO more generic way to work with other entity types as well.
       case "entity:node":
         list($entity, $entity_type) = explode(':', $validation_type);
         $options = $handler->options;
@@ -291,5 +291,4 @@ class ContextualFilter extends BlockSettingsPluginBase {
   public function getMultiValueSeparator() {
     return '+';
   }
-
 }

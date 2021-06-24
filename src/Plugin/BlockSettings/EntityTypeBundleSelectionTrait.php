@@ -96,13 +96,15 @@ trait EntityTypeBundleSelectionTrait {
    *   List of bundles.
    */
   public function getBundles($target_type) {
-    $options = \Drupal::entityManager()
+    $options = \Drupal::entityTypeManager()
       ->getBundleInfo($target_type);
 
-    array_walk($options,
+    array_walk(
+      $options,
       function ($item, $key) use (&$options) {
         $options[$key] = $item['label'];
-      });
+      }
+    );
 
     return $options;
   }
@@ -123,5 +125,4 @@ trait EntityTypeBundleSelectionTrait {
     $element = NestedArray::getValue($form, array_slice($button['#array_parents'], 0, -1));
     return $element;
   }
-
 }
