@@ -148,7 +148,7 @@ class InlineEntity extends BlockSettingsPluginBase {
     $display_options = $this->getDisplayOptions();
     $entity_type = $display_options['entity_reference']['target_type'];
 
-    $options = \Drupal::entityTypeManager()->getViewModeOptions($entity_type);
+    $options = \Drupal::service("entity_display.repository")->getViewModeOptions($entity_type);
 
     // Build the setting form.
     $form['view_mode'] = [

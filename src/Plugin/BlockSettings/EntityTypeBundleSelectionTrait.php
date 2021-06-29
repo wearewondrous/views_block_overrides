@@ -35,7 +35,7 @@ trait EntityTypeBundleSelectionTrait {
 
     $subform['entity_reference'] = [
       '#type' => 'fieldset',
-      '#title' => t('Entity reference settings'),
+      '#title' => $this->t('Entity reference settings'),
       '#weight' => -40,
       '#prefix' => '<div id="entity-reference-selection-wrapper">',
       '#suffix' => '</div>',
@@ -46,7 +46,7 @@ trait EntityTypeBundleSelectionTrait {
       '#title' => $this->t('Type of item to reference'),
       '#options' => $target_type_options,
       '#required' => TRUE,
-      '#empty_option' => t('- Select a target type -'),
+      '#empty_option' => $this->t('- Select a target type -'),
       '#default_value' => $target_type,
       '#ajax' => [
         'callback' => [get_called_class(), 'entityTypeAjaxCallback'],
@@ -60,7 +60,7 @@ trait EntityTypeBundleSelectionTrait {
       '#title' => $this->t('Bundle'),
       '#options' => $bundle_options,
       '#required' => TRUE,
-      '#empty_option' => t('- Select a bundle type -'),
+      '#empty_option' => $this->t('- Select a bundle type -'),
       '#default_value' => $bundle_type,
     ];
 
@@ -96,7 +96,7 @@ trait EntityTypeBundleSelectionTrait {
    *   List of bundles.
    */
   public function getBundles($target_type) {
-    $options = \Drupal::entityTypeManager()
+    $options = \Drupal::service("entity_type.bundle.info")
       ->getBundleInfo($target_type);
 
     array_walk(

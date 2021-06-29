@@ -135,7 +135,7 @@ class ContextualFilter extends BlockSettingsPluginBase {
       }
       $terms = Term::loadMultiple($query->execute());
       foreach ($terms as $term) {
-        $values[$term->id()] = \Drupal::entityTypeManager()
+        $values[$term->id()] = \Drupal::service("entity.repository")
           ->getTranslationFromContext($term)
           ->label();
       }
@@ -160,8 +160,8 @@ class ContextualFilter extends BlockSettingsPluginBase {
         ];
         foreach ($validate_bundles as $bundle) {
           $terms = \Drupal::entityTypeManager()
-            ->getStorage('taxonomy_term')
-            ->loadTree($bundle);
+          ->getStorage('taxonomy_term')
+          ->loadMultiple($bundle);
           foreach ($terms as $term) {
             $values[$term->tid] = $term->name;
           }

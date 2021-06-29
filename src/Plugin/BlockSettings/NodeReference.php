@@ -51,7 +51,6 @@ class NodeReference extends BlockSettingsPluginBase {
       '#default_value' => $default_value,
     );
 
-   return $subform;
+    return $subform;
   }
-
 }

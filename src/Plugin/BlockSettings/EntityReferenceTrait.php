@@ -43,10 +43,12 @@ trait EntityReferenceTrait {
     // "Warning: Invalid argument supplied for foreach()
     // in Drupal\Core\Render\Element\Checkboxes::valueCallback()"
     // @see \Drupal\user\Plugin\EntityReferenceSelection\UserSelection::buildConfigurationForm
-    if ($target_type == 'user'
+    if (
+      $target_type == 'user'
       && isset($selection_settings['filter']['type'])
       && $selection_settings['filter']['type'] == 'role'
-      && empty($selection_settings['filter']['role'])) {
+      && empty($selection_settings['filter']['role'])
+    ) {
       $selection_settings['filter']['role'] = [];
     }
 
@@ -73,7 +75,7 @@ trait EntityReferenceTrait {
 
     $subform['entity_reference'] = [
       '#type' => 'fieldset',
-      '#title' => t('Entity reference settings'),
+      '#title' => $this->t('Entity reference settings'),
       '#weight' => -40,
       '#tree' => TRUE,
       '#prefix' => '<div id="entity-reference-selection-wrapper">',
@@ -85,7 +87,7 @@ trait EntityReferenceTrait {
       '#title' => $this->t('Type of item to reference'),
       '#options' => $target_type_options,
       '#required' => TRUE,
-      '#empty_option' => t('- Select a target type -'),
+      '#empty_option' => $this->t('- Select a target type -'),
       '#default_value' => $target_type,
       '#ajax' => [
         'callback' => [get_called_class(), 'entityReferenceAjaxCallback'],
@@ -181,5 +183,4 @@ trait EntityReferenceTrait {
     $element = NestedArray::getValue($form, array_slice($button['#array_parents'], 0, -1));
     return $element;
   }
-
 }
