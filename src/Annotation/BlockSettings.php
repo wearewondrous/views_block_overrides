@@ -51,5 +51,4 @@ class BlockSettings extends Plugin {
    * @var bool
    */
   public $area;
-
 }

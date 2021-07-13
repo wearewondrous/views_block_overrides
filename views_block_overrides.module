@@ -6,6 +6,7 @@ use Drupal\views\Plugin\views\display\Block as CoreBlock;
 use Drupal\ctools_views\Plugin\Display\Block as CtoolsBlock;
 use Drupal\views_block_overrides\Plugin\views\display\CtoolsBlockOverrides;
 use Drupal\views_block_overrides\Plugin\Block\ViewsBlockOverride;
+
 /**
  *  Implements hook_field_widget_FIELD-ID_FORM_alter().
  *
@@ -28,7 +29,7 @@ function views_block_overrides_field_widget_block_field_default_form_alter(&$ele
     ];
     foreach ($hiden_elements as $name) {
       if (isset($element['settings'][$name])) {
-      //  $element['settings'][$name]['#access'] = FALSE;
+        //  $element['settings'][$name]['#access'] = FALSE;
       }
     }
   }
@@ -38,9 +39,9 @@ function views_block_overrides_field_widget_block_field_default_form_alter(&$ele
  * Implements hook_views_plugins_display_alter().
  */
 function views_block_overrides_views_plugins_display_alter(&$displays) {
-//  if (!empty($displays['block']['class']) && $displays['block']['class'] == CtoolsBlock::class) {
-//    $displays['block']['class'] = CtoolsBlockOverrides::class;
-//  }
+  //  if (!empty($displays['block']['class']) && $displays['block']['class'] == CtoolsBlock::class) {
+  //    $displays['block']['class'] = CtoolsBlockOverrides::class;
+  //  }
 }
 
 /**

@@ -6,7 +6,7 @@ use Drupal\views_block_overrides\Plugin\BlockSettingsPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\Block\ViewsBlock;
 use Drupal\Core\Plugin\Context\Context;
-use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\taxonomy\Entity\Term;
 
 /**
@@ -135,7 +135,7 @@ class ContextualFilter extends BlockSettingsPluginBase {
       }
       $terms = Term::loadMultiple($query->execute());
       foreach ($terms as $term) {
-        $values[$term->id()] = \Drupal::entityManager()
+        $values[$term->id()] = \Drupal::service("entity.repository")
           ->getTranslationFromContext($term)
           ->label();
       }
@@ -159,15 +159,15 @@ class ContextualFilter extends BlockSettingsPluginBase {
           $options['exception']['value'] => $options['exception']['title'],
         ];
         foreach ($validate_bundles as $bundle) {
-          $terms = \Drupal::entityManager()
-            ->getStorage('taxonomy_term')
-            ->loadTree($bundle);
+          $terms = \Drupal::entityTypeManager()
+          ->getStorage('taxonomy_term')
+          ->loadMultiple($bundle);
           foreach ($terms as $term) {
             $values[$term->tid] = $term->name;
           }
         }
         break;
-      // TODO more generic way to work with other entity types as well.
+        // TODO more generic way to work with other entity types as well.
       case "entity:node":
         list($entity, $entity_type) = explode(':', $validation_type);
         $options = $handler->options;
@@ -259,7 +259,7 @@ class ContextualFilter extends BlockSettingsPluginBase {
         if ($values['enabled']) {
           $contextual_filter_value = $values['value'];
           $contextual_filter_type = $this->getContextualFilterValidationType($id);
-          $context_definition = new ContextDefinition($contextual_filter_type, $id);
+          $context_definition = new EntityContextDefinition($contextual_filter_type, $id);
           $context_definition->setDefaultValue($contextual_filter_value);
           $block->setContext($id, new Context($context_definition, $contextual_filter_value));
         }
@@ -291,5 +291,4 @@ class ContextualFilter extends BlockSettingsPluginBase {
   public function getMultiValueSeparator() {
     return '+';
   }
-
 }

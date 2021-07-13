@@ -22,9 +22,9 @@ class ViewsEntityRowDynamicFormat extends ViewsEntityRow {
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
     parent::getDerivativeDefinitions($base_plugin_definition);
-    foreach ($this->entityManager->getDefinitions() as $entity_type_id => $entity_type) {
+    foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
       // Just add support for entity types which have a views integration.
-      if (($base_table = $entity_type->getBaseTable()) && $this->viewsData->get($base_table) && $this->entityManager->hasHandler($entity_type_id, 'view_builder')) {
+      if (($base_table = $entity_type->getBaseTable()) && $this->viewsData->get($base_table) && $this->entityTypeManager->hasHandler($entity_type_id, 'view_builder')) {
         $this->derivatives[$entity_type_id] = [
           'title' => 'Content (with dynamic view mode)'
         ] + $this->derivatives[$entity_type_id];
@@ -33,5 +33,4 @@ class ViewsEntityRowDynamicFormat extends ViewsEntityRow {
 
     return $this->derivatives;
   }
-
 }
