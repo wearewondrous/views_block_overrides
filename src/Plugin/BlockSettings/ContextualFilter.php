@@ -6,7 +6,7 @@ use Drupal\views_block_overrides\Plugin\BlockSettingsPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\Block\ViewsBlock;
 use Drupal\Core\Plugin\Context\Context;
-use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\taxonomy\Entity\Term;
 
 /**
@@ -259,7 +259,7 @@ class ContextualFilter extends BlockSettingsPluginBase {
         if ($values['enabled']) {
           $contextual_filter_value = $values['value'];
           $contextual_filter_type = $this->getContextualFilterValidationType($id);
-          $context_definition = new ContextDefinition($contextual_filter_type, $id);
+          $context_definition = new EntityContextDefinition($contextual_filter_type, $id);
           $context_definition->setDefaultValue($contextual_filter_value);
           $block->setContext($id, new Context($context_definition, $contextual_filter_value));
         }

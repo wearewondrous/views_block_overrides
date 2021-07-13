@@ -35,7 +35,7 @@ trait EntityTypeBundleSelectionTrait {
 
     $subform['entity_reference'] = [
       '#type' => 'fieldset',
-      '#title' => $this->t('Entity reference settings'),
+      '#title' => 'Entity reference settings',
       '#weight' => -40,
       '#prefix' => '<div id="entity-reference-selection-wrapper">',
       '#suffix' => '</div>',

@@ -75,7 +75,7 @@ trait EntityReferenceTrait {
 
     $subform['entity_reference'] = [
       '#type' => 'fieldset',
-      '#title' => $this->t('Entity reference settings'),
+      '#title' => 'Entity reference settings',
       '#weight' => -40,
       '#tree' => TRUE,
       '#prefix' => '<div id="entity-reference-selection-wrapper">',
