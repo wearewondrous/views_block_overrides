@@ -228,8 +228,7 @@ class BlockOverrides extends Block {
   public function getFormElement($id, $handler, $default_value, $value) {
     if (is_array($value)) {
       $element = $this->getOptionsElement($handler, $default_value, $value);
-    }
-    else {
+    } else {
       $element = $this->getTextfieldElement($id, $handler, $default_value);
     }
 
@@ -281,7 +280,7 @@ class BlockOverrides extends Block {
         foreach ($validate_bundles as $bundle) {
           $terms = \Drupal::entityTypeManager()
             ->getStorage('taxonomy_term')
-            ->loadByProperties($bundle);
+            ->loadTree($bundle);
           foreach ($terms as $term) {
             $values[$term->tid] = $term->name;
           }
