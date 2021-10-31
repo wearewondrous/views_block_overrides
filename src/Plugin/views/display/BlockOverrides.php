@@ -8,7 +8,6 @@ use Drupal\views\Plugin\views\display\Block;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\taxonomy\Entity\Term;
-use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManagerInterface;
 
 /**
  * A block plugin that allows exposed filters to be configured.
@@ -18,11 +17,12 @@ use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManagerInterface;
  * @ViewsDisplay(
  *   id = "field_block_filter_block",
  *   title = @Translation("Block Overrides"),
- *   help = @Translation("Allows block displays to override block
- *   configuration.
- *   "), theme = "views_view", register_theme = FALSE, uses_hook_block
- *   = TRUE, contextual_links_locations = {"block"}, admin =
- *   @Translation("Overrides Block")
+ *   help = @Translation("Allows block displays to override block configuration."),
+ *   theme = "views_view", 
+ *   register_theme = FALSE,
+ *   uses_hook_block = TRUE,
+ *   contextual_links_locations = {"block"},
+ *   admin = @Translation("Overrides Block")
  * )
  *
  * @see \Drupal\views\Plugin\block\block\ViewsBlock
@@ -255,7 +255,7 @@ class BlockOverrides extends Block {
       }
       $terms = Term::loadMultiple($query->execute());
       foreach ($terms as $term) {
-        $values[$term->id()] = \Drupal::entityManager()
+        $values[$term->id()] = \Drupal::service("entity.repository")
           ->getTranslationFromContext($term)
           ->label();
       }
@@ -279,15 +279,15 @@ class BlockOverrides extends Block {
           $options['exception']['value'] => $options['exception']['title'],
         ];
         foreach ($validate_bundles as $bundle) {
-          $terms = \Drupal::entityManager()
+          $terms = \Drupal::entityTypeManager()
             ->getStorage('taxonomy_term')
-            ->loadTree($bundle);
+            ->loadByProperties($bundle);
           foreach ($terms as $term) {
             $values[$term->tid] = $term->name;
           }
         }
         break;
-      // TODO more generic way to work with other entity types as well.
+        // TODO more generic way to work with other entity types as well.
       case "entity:node":
         list($entity, $entity_type) = explode(':', $validation_type);
         $options = $handler->options;
@@ -439,5 +439,4 @@ class BlockOverrides extends Block {
       $form['allow']['#options']['exposed_filter'] = $this->t('Exposed filters');
     }
   }
-
 }
